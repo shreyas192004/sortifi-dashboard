@@ -12,11 +12,11 @@ Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
 [31mx[39m Build failed in 1.37s
 [31merror during build:
 [31m[vite:esbuild] Transform failed with 4 errors:
-C:/Users/bisug/Downloads/ai-doc-aide-main/ai-doc-aide-main/src/pages/SortifiLandingPage.tsx:828:119: ERROR: Unexpected closing "feMergeNode" tag does not match opening "feMergenode" tag
-C:/Users/bisug/Downloads/ai-doc-aide-main/ai-doc-aide-main/src/pages/SortifiLandingPage.tsx:828:165: ERROR: Unexpected closing "feMergeNode" tag does not match opening "feMergenode" tag
-C:/Users/bisug/Downloads/ai-doc-aide-main/ai-doc-aide-main/src/pages/SortifiLandingPage.tsx:829:118: ERROR: Unexpected closing "feMergeNode" tag does not match opening "feMergenode" tag
-C:/Users/bisug/Downloads/ai-doc-aide-main/ai-doc-aide-main/src/pages/SortifiLandingPage.tsx:829:164: ERROR: Unexpected closing "feMergeNode" tag does not match opening "feMergenode" tag[31m
-file: [36mC:/Users/bisug/Downloads/ai-doc-aide-main/ai-doc-aide-main/src/pages/SortifiLandingPage.tsx:828:119[31m
+C:/Users/bisug/Downloads/ai-doc-aide-main/ai-doc-aide-main/src/pages/CluedoxLandingPage.tsx:828:119: ERROR: Unexpected closing "feMergeNode" tag does not match opening "feMergenode" tag
+C:/Users/bisug/Downloads/ai-doc-aide-main/ai-doc-aide-main/src/pages/CluedoxLandingPage.tsx:828:165: ERROR: Unexpected closing "feMergeNode" tag does not match opening "feMergenode" tag
+C:/Users/bisug/Downloads/ai-doc-aide-main/ai-doc-aide-main/src/pages/CluedoxLandingPage.tsx:829:118: ERROR: Unexpected closing "feMergeNode" tag does not match opening "feMergenode" tag
+C:/Users/bisug/Downloads/ai-doc-aide-main/ai-doc-aide-main/src/pages/CluedoxLandingPage.tsx:829:164: ERROR: Unexpected closing "feMergeNode" tag does not match opening "feMergenode" tag[31m
+file: [36mC:/Users/bisug/Downloads/ai-doc-aide-main/ai-doc-aide-main/src/pages/CluedoxLandingPage.tsx:828:119[31m
 [33m
 [33mUnexpected closing "feMergeNode" tag does not match opening "feMergenode" tag[33m
 826|    <svg id="wire-svg" viewBox="0 0 1440 900" preserveAspectRatio="none">

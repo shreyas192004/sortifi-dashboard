@@ -462,7 +462,7 @@ const LANDING_HTML = `
 <button class="back-to-top" id="backToTop" aria-label="Back to top">↑</button>
 
 <nav id="navbar">
-  <a href="#" class="nav-logo"><div class="nav-logo-dot"></div>Sortifi</a>
+  <a href="#" class="nav-logo"><div class="nav-logo-dot"></div>Cluedox</a>
   <ul class="nav-links">
     <li><a href="#features">Features</a></li>
     <li><a href="#how">How It Works</a></li>
@@ -491,8 +491,8 @@ const LANDING_HTML = `
     <div class="reveal" style="margin-bottom:8px;"><div class="section-label">THE SOLUTION</div></div>
     <div class="solution-grid">
       <div class="reveal" style="transition-delay:0.1s;">
-        <h2 class="solution-title">Sortifi securely organises<br>your files.</h2>
-        <p class="solution-body">The moment you upload a document, Sortifi securely categorises it — letting you instantly find what you need by meaning, not just filename.</p>
+        <h2 class="solution-title">Cluedox securely organises<br>your files.</h2>
+        <p class="solution-body">The moment you upload a document, Cluedox securely categorises it — letting you instantly find what you need by meaning, not just filename.</p>
         <div class="feature-pills"><span class="feature-pill">✓ Auto-tagging</span><span class="feature-pill">✓ Smart summaries</span><span class="feature-pill">✓ Expiry reminders</span><span class="feature-pill">✓ Semantic search</span><span class="feature-pill">✓ Doc Chat</span><span class="feature-pill">✓ Secure sharing</span></div>
       </div>
       <div class="reveal" style="transition-delay:0.25s;">
@@ -518,14 +518,14 @@ const LANDING_HTML = `
   <div class="container">
     <div class="features-header reveal"><div class="section-label">CORE FEATURES</div><h2 class="section-title">Everything your files need.<br>Nothing you don't.</h2></div>
     <div class="features-grid">
-      <div class="feature-card reveal-scale" style="transition-delay:0.05s;"><div class="feature-icon">🔍</div><h3>Smart Search Tags</h3><p>Upload any file — Sortifi automatically creates smart tags for names, dates, amounts, and key details. Your files remain completely private and are never shared.</p></div>
-      <div class="feature-card reveal-scale" style="transition-delay:0.17s;"><div class="feature-icon">💬</div><h3>Ask Your Documents</h3><p>Ask questions about your files naturally. "What's the renewal date on my insurance?" — Sortifi points you to the exact document instantly.</p></div>
+      <div class="feature-card reveal-scale" style="transition-delay:0.05s;"><div class="feature-icon">🔍</div><h3>Smart Search Tags</h3><p>Upload any file — Cluedox automatically creates smart tags for names, dates, amounts, and key details. Your files remain completely private and are never shared.</p></div>
+      <div class="feature-card reveal-scale" style="transition-delay:0.17s;"><div class="feature-icon">💬</div><h3>Ask Your Documents</h3><p>Ask questions about your files naturally. "What's the renewal date on my insurance?" — Cluedox points you to the exact document instantly.</p></div>
       <div class="feature-card reveal-scale" style="transition-delay:0.29s;"><div class="feature-icon">📊</div><h3>Document Comparison</h3><p>Compare two documents side-by-side to easily spot changes in contracts, policies, and agreements instantly.</p></div>
-      <div class="feature-card reveal-scale" style="transition-delay:0.41s;"><div class="feature-icon">⏰</div><h3>Smart Expiry Reminders</h3><p>Sortifi detects expiry dates in your documents and sets reminders automatically. Never miss a renewal, deadline, or compliance date.</p></div>
+      <div class="feature-card reveal-scale" style="transition-delay:0.41s;"><div class="feature-icon">⏰</div><h3>Smart Expiry Reminders</h3><p>Cluedox detects expiry dates in your documents and sets reminders automatically. Never miss a renewal, deadline, or compliance date.</p></div>
       <div class="feature-card reveal-scale" style="transition-delay:0.53s;"><div class="feature-icon">👥</div><h3>Team Collaboration</h3><p>Create teams, shared folders, and collaborate on documents with role-based access. Every team member sees only what they should.</p></div>
       <div class="feature-card reveal-scale" style="transition-delay:0.65s;"><div class="feature-icon">🔗</div><h3>Secure File Sharing</h3><p>Share files with time-limited links that auto-expire. Set view-once mode for sensitive documents. You control who sees what, and for how long.</p></div>
-      <div class="feature-card reveal-scale" style="transition-delay:0.77s;"><div class="feature-icon">📁</div><h3>Smart Folders & Auto-Tagging</h3><p>Sortifi automatically organises files into smart categories — invoices, legal, medical, personal. Custom tags and smart folders keep everything in its place.</p></div>
-      <div class="feature-card reveal-scale" style="transition-delay:0.89s;"><div class="feature-icon">☁️</div><h3>Google Drive Import & Export</h3><p>Connect Google Drive to import and export files seamlessly. Your existing documents, now with Sortifi intelligence.</p></div>
+      <div class="feature-card reveal-scale" style="transition-delay:0.77s;"><div class="feature-icon">📁</div><h3>Smart Folders & Auto-Tagging</h3><p>Cluedox automatically organises files into smart categories — invoices, legal, medical, personal. Custom tags and smart folders keep everything in its place.</p></div>
+      <div class="feature-card reveal-scale" style="transition-delay:0.89s;"><div class="feature-icon">☁️</div><h3>Google Drive Import & Export</h3><p>Connect Google Drive to import and export files seamlessly. Your existing documents, now with Cluedox intelligence.</p></div>
       <div class="feature-card reveal-scale" style="transition-delay:1.01s;"><div class="feature-icon">🔐</div><h3>Privacy-First Security</h3><p>AES-256 encryption at rest, TLS 1.3 in transit. Zero-knowledge architecture — our team cannot access your files. Your data never trains any AI model.</p></div>
     </div>
   </div>
@@ -538,7 +538,7 @@ const LANDING_HTML = `
     <div class="steps-wrapper">
       <div class="steps-line"></div>
       <div class="step reveal" style="transition-delay:0.08s;"><div class="step-num">1</div><h3>Upload Anything</h3><p>Drop a file, photo, PDF or scan from any device.</p></div>
-      <div class="step reveal" style="transition-delay:0.2s;"><div class="step-num">2</div><h3>Smart Organisation</h3><p>In under 3 seconds, Sortifi securely categorises the document, creates tags, and prepares a handy summary.</p></div>
+      <div class="step reveal" style="transition-delay:0.2s;"><div class="step-num">2</div><h3>Smart Organisation</h3><p>In under 3 seconds, Cluedox securely categorises the document, creates tags, and prepares a handy summary.</p></div>
       <div class="step reveal" style="transition-delay:0.32s;"><div class="step-num">3</div><h3>Instantly Organised</h3><p>Files are tagged, summarised, indexed for search, and reminder-ready.</p></div>
     </div>
   </div>
@@ -547,7 +547,7 @@ const LANDING_HTML = `
 <section id="search">
   <div class="container">
     <div class="search-header reveal"><div class="section-label">SEARCH INTELLIGENCE</div><h2 class="section-title">9 ways to find any file.</h2></div>
-    <p class="search-subtitle reveal" style="transition-delay:0.1s;">Most tools give you one. Sortifi gives you nine.</p>
+    <p class="search-subtitle reveal" style="transition-delay:0.1s;">Most tools give you one. Cluedox gives you nine.</p>
     <div class="methods-grid">
       <div class="method-card reveal-scale" style="transition-delay:0.05s;"><div class="method-name">Keyword Search</div><div class="method-desc">Search inside file content, not just filenames.</div></div>
       <div class="method-card reveal-scale" style="transition-delay:0.1s;"><div class="method-name">Tag-Based Search</div><div class="method-desc">Filter by auto-assigned or custom tags.</div></div>
@@ -582,11 +582,11 @@ const LANDING_HTML = `
     <div class="security-grid">
       <div class="reveal" style="transition-delay:0.08s;">
         <h2 class="security-title">Your data is sacred.<br>We treat it that way.</h2>
-        <p class="security-body">Sortifi is built privacy-first from the ground up. We don't sell your data, we don't share it with advertisers, and we never use your files to train AI models. Your documents belong to you — period.</p>
+        <p class="security-body">Cluedox is built privacy-first from the ground up. We don't sell your data, we don't share it with advertisers, and we never use your files to train AI models. Your documents belong to you — period.</p>
         <div class="security-feature"><div class="sec-check"></div><div class="security-feature-text"><h4>AES-256 Encryption at Rest</h4><p>Every file encrypted with military-grade standards. TLS 1.3 in transit.</p></div></div>
         <div class="security-feature"><div class="sec-check"></div><div class="security-feature-text"><h4>Zero-Knowledge Architecture</h4><p>Our team physically cannot access your file contents. Only you hold the keys.</p></div></div>
         <div class="security-feature"><div class="sec-check"></div><div class="security-feature-text"><h4>No Data Selling. Ever.</h4><p>Your data is never sold, shared with third parties, or used for advertising.</p></div></div>
-        <div class="security-feature"><div class="sec-check"></div><div class="security-feature-text"><h4>AI Stays Private</h4><p>Sortifi processes your files in real-time securely. Your content is completely private and never trains any model.</p></div></div>
+        <div class="security-feature"><div class="sec-check"></div><div class="security-feature-text"><h4>AI Stays Private</h4><p>Cluedox processes your files in real-time securely. Your content is completely private and never trains any model.</p></div></div>
         <div class="security-feature"><div class="sec-check"></div><div class="security-feature-text"><h4>Delete Anytime, Completely</h4><p>Delete your account and all data is permanently wiped within 30 days. No hidden copies.</p></div></div>
         <div class="security-feature"><div class="sec-check"></div><div class="security-feature-text"><h4>DPDP Act Compliant</h4><p>Built for India's Digital Personal Data Protection Act 2023 from day one.</p></div></div>
       </div>
@@ -621,18 +621,18 @@ const LANDING_HTML = `
   <div class="container"><div class="testimonials-header reveal"><div class="section-label">WHAT PEOPLE SAY</div><h2 class="section-title">Trusted by early testers across India.</h2></div></div>
   <div class="testimonials-track-wrap">
     <div class="testimonials-track" id="testimonialsTrack">
-      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"I used to spend 30 minutes every morning hunting for client contracts. Sortifi found everything in under 2 seconds."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0B2044,#0E879B)">RK</div><div><div class="testimonial-name">Rahul Khedekar</div><div class="testimonial-role">Freelance Consultant · Pune</div></div></div></div>
+      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"I used to spend 30 minutes every morning hunting for client contracts. Cluedox found everything in under 2 seconds."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0B2044,#0E879B)">RK</div><div><div class="testimonial-name">Rahul Khedekar</div><div class="testimonial-role">Freelance Consultant · Pune</div></div></div></div>
       <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"The auto-reminder for our insurance renewals alone is worth it. We almost missed a ₹40L policy renewal."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0E879B,#13C5C5)">PR</div><div><div class="testimonial-name">Priya Rawat</div><div class="testimonial-role">CA · Mumbai</div></div></div></div>
-      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"Our clinic now manages all patient consent forms through Sortifi. What used to take an hour takes 5 minutes."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#13C5C5,#0B2044)">DP</div><div><div class="testimonial-name">Dr. Deepa Pillai</div><div class="testimonial-role">Healthcare Clinic · Bangalore</div></div></div></div>
+      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"Our clinic now manages all patient consent forms through Cluedox. What used to take an hour takes 5 minutes."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#13C5C5,#0B2044)">DP</div><div><div class="testimonial-name">Dr. Deepa Pillai</div><div class="testimonial-role">Healthcare Clinic · Bangalore</div></div></div></div>
       <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"The natural language search understood 'GST invoices from March' perfectly."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0E879B,#0B2044)">AS</div><div><div class="testimonial-name">Arjun Shah</div><div class="testimonial-role">SMB Owner · Ahmedabad</div></div></div></div>
-      <div class="testimonial-card"><div class="testimonial-stars">★★★★☆</div><p class="testimonial-quote">"Sortifi's semantic search found papers relevant to my thesis that I'd completely forgotten I had."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#1A3A6E,#13C5C5)">NJ</div><div><div class="testimonial-name">Neha Joshi</div><div class="testimonial-role">PhD Researcher · IIT Delhi</div></div></div></div>
-      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"Sortifi's expiry detection smartly flags renewals weeks before."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0B2044,#13C5C5)">VM</div><div><div class="testimonial-name">Vikram Mehta</div><div class="testimonial-role">Legal Firm Partner · Delhi</div></div></div></div>
-      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"I used to spend 30 minutes every morning hunting for client contracts. Sortifi found everything in under 2 seconds."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0B2044,#0E879B)">RK</div><div><div class="testimonial-name">Rahul Khedekar</div><div class="testimonial-role">Freelance Consultant · Pune</div></div></div></div>
+      <div class="testimonial-card"><div class="testimonial-stars">★★★★☆</div><p class="testimonial-quote">"Cluedox's semantic search found papers relevant to my thesis that I'd completely forgotten I had."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#1A3A6E,#13C5C5)">NJ</div><div><div class="testimonial-name">Neha Joshi</div><div class="testimonial-role">PhD Researcher · IIT Delhi</div></div></div></div>
+      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"Cluedox's expiry detection smartly flags renewals weeks before."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0B2044,#13C5C5)">VM</div><div><div class="testimonial-name">Vikram Mehta</div><div class="testimonial-role">Legal Firm Partner · Delhi</div></div></div></div>
+      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"I used to spend 30 minutes every morning hunting for client contracts. Cluedox found everything in under 2 seconds."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0B2044,#0E879B)">RK</div><div><div class="testimonial-name">Rahul Khedekar</div><div class="testimonial-role">Freelance Consultant · Pune</div></div></div></div>
       <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"The auto-reminder for our insurance renewals alone is worth it."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0E879B,#13C5C5)">PR</div><div><div class="testimonial-name">Priya Rawat</div><div class="testimonial-role">CA · Mumbai</div></div></div></div>
-      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"Our clinic now manages all patient consent forms through Sortifi."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#13C5C5,#0B2044)">DP</div><div><div class="testimonial-name">Dr. Deepa Pillai</div><div class="testimonial-role">Healthcare Clinic · Bangalore</div></div></div></div>
+      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"Our clinic now manages all patient consent forms through Cluedox."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#13C5C5,#0B2044)">DP</div><div><div class="testimonial-name">Dr. Deepa Pillai</div><div class="testimonial-role">Healthcare Clinic · Bangalore</div></div></div></div>
       <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"The natural language search understood 'GST invoices from March' perfectly."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0E879B,#0B2044)">AS</div><div><div class="testimonial-name">Arjun Shah</div><div class="testimonial-role">SMB Owner · Ahmedabad</div></div></div></div>
-      <div class="testimonial-card"><div class="testimonial-stars">★★★★☆</div><p class="testimonial-quote">"Sortifi's semantic search found papers relevant to my thesis."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#1A3A6E,#13C5C5)">NJ</div><div><div class="testimonial-name">Neha Joshi</div><div class="testimonial-role">PhD Researcher · IIT Delhi</div></div></div></div>
-      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"Sortifi's expiry detection smartly flags renewals weeks before."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0B2044,#13C5C5)">VM</div><div><div class="testimonial-name">Vikram Mehta</div><div class="testimonial-role">Legal Firm Partner · Delhi</div></div></div></div>
+      <div class="testimonial-card"><div class="testimonial-stars">★★★★☆</div><p class="testimonial-quote">"Cluedox's semantic search found papers relevant to my thesis."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#1A3A6E,#13C5C5)">NJ</div><div><div class="testimonial-name">Neha Joshi</div><div class="testimonial-role">PhD Researcher · IIT Delhi</div></div></div></div>
+      <div class="testimonial-card"><div class="testimonial-stars">★★★★★</div><p class="testimonial-quote">"Cluedox's expiry detection smartly flags renewals weeks before."</p><div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0B2044,#13C5C5)">VM</div><div><div class="testimonial-name">Vikram Mehta</div><div class="testimonial-role">Legal Firm Partner · Delhi</div></div></div></div>
     </div>
   </div>
 </section>
@@ -659,14 +659,14 @@ const LANDING_HTML = `
   <div class="container">
     <div class="faq-header reveal"><div class="section-label">FAQ</div><h2 class="section-title">Questions, answered.</h2></div>
     <div class="faq-grid">
-      <div class="faq-item reveal" style="transition-delay:0.05s;"><div class="faq-question"><h4>Is my data safe with Sortifi?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>Absolutely. Every file is encrypted with AES-256 at rest and TLS 1.3 in transit. We operate on a zero-knowledge architecture — our team physically cannot access your file contents. We never sell, share, or monetise your data. Period.</p></div></div>
-      <div class="faq-item reveal" style="transition-delay:0.1s;"><div class="faq-question"><h4>Does Sortifi use my files to train AI?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>No. Your files are securely processed only to create search tags and summaries, and are never retained by any AI provider. Your documents never train any model — public or private.</p></div></div>
+      <div class="faq-item reveal" style="transition-delay:0.05s;"><div class="faq-question"><h4>Is my data safe with Cluedox?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>Absolutely. Every file is encrypted with AES-256 at rest and TLS 1.3 in transit. We operate on a zero-knowledge architecture — our team physically cannot access your file contents. We never sell, share, or monetise your data. Period.</p></div></div>
+      <div class="faq-item reveal" style="transition-delay:0.1s;"><div class="faq-question"><h4>Does Cluedox use my files to train AI?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>No. Your files are securely processed only to create search tags and summaries, and are never retained by any AI provider. Your documents never train any model — public or private.</p></div></div>
       <div class="faq-item reveal" style="transition-delay:0.15s;"><div class="faq-question"><h4>Can I delete all my data?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>Yes. You can delete individual files or your entire account at any time. Upon account deletion, all files, metadata, and personal information are permanently wiped within 30 days. No hidden backups, no retained copies.</p></div></div>
-      <div class="faq-item reveal" style="transition-delay:0.2s;"><div class="faq-question"><h4>What file types does Sortifi support?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>PDFs, Word documents, Excel sheets, images (JPG, PNG with OCR), scanned documents, and text files. More formats added regularly.</p></div></div>
-      <div class="faq-item reveal" style="transition-delay:0.25s;"><div class="faq-question"><h4>What can I do with the AI chat feature?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>Ask questions about your documents in natural language. "When does my insurance expire?", "Summarise the lease agreement" — Sortifi answers from your own files, privately.</p></div></div>
+      <div class="faq-item reveal" style="transition-delay:0.2s;"><div class="faq-question"><h4>What file types does Cluedox support?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>PDFs, Word documents, Excel sheets, images (JPG, PNG with OCR), scanned documents, and text files. More formats added regularly.</p></div></div>
+      <div class="faq-item reveal" style="transition-delay:0.25s;"><div class="faq-question"><h4>What can I do with the AI chat feature?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>Ask questions about your documents in natural language. "When does my insurance expire?", "Summarise the lease agreement" — Cluedox answers from your own files, privately.</p></div></div>
       <div class="faq-item reveal" style="transition-delay:0.3s;"><div class="faq-question"><h4>How does file sharing work?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>Generate time-limited links (5 min to 24 hours) or view-once links for sensitive files. Links auto-expire — you stay in full control of who sees your documents.</p></div></div>
-      <div class="faq-item reveal" style="transition-delay:0.35s;"><div class="faq-question"><h4>Is Sortifi compliant with India's DPDP Act?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>Yes. Built from the ground up for DPDP 2023. Consent records maintained, full data portability, and complete deletion on request. Read our <a href="/privacy" style="color:var(--teal);text-decoration:underline;">Privacy Policy</a> for details.</p></div></div>
-      <div class="faq-item reveal" style="transition-delay:0.4s;"><div class="faq-question"><h4>Can I connect Google Drive?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>Yes! Connect your Google Drive to import files directly into Sortifi, or export Sortifi files back to Drive. Your Drive credentials are stored securely and can be revoked anytime.</p></div></div>
+      <div class="faq-item reveal" style="transition-delay:0.35s;"><div class="faq-question"><h4>Is Cluedox compliant with India's DPDP Act?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>Yes. Built from the ground up for DPDP 2023. Consent records maintained, full data portability, and complete deletion on request. Read our <a href="/privacy" style="color:var(--teal);text-decoration:underline;">Privacy Policy</a> for details.</p></div></div>
+      <div class="faq-item reveal" style="transition-delay:0.4s;"><div class="faq-question"><h4>Can I connect Google Drive?</h4><div class="faq-chevron">▾</div></div><div class="faq-answer"><p>Yes! Connect your Google Drive to import files directly into Cluedox, or export Cluedox files back to Drive. Your Drive credentials are stored securely and can be revoked anytime.</p></div></div>
     </div>
   </div>
 </section>
@@ -675,15 +675,15 @@ const LANDING_HTML = `
   <div class="container">
     <div class="support-header reveal"><div class="section-label">SUPPORT</div><h2>We're here to <span class="gradient-text">help.</span></h2><p>Whether you need quick answers or hands-on assistance — we've got you covered.</p></div>
     <div class="support-grid">
-      <div class="support-card reveal" style="transition-delay:0.05s;"><div class="support-card-icon">📧</div><h3>Email Support</h3><p>Reach our team directly. Pro gets 24hr SLA, Business gets 4hr.</p><a href="mailto:founders@Sortifi.in" class="support-card-link">founders@Sortifi.in</a></div>
+      <div class="support-card reveal" style="transition-delay:0.05s;"><div class="support-card-icon">📧</div><h3>Email Support</h3><p>Reach our team directly. Pro gets 24hr SLA, Business gets 4hr.</p><a href="mailto:founders@Cluedox.in" class="support-card-link">founders@Cluedox.in</a></div>
       <div class="support-card reveal" style="transition-delay:0.1s;"><div class="support-card-icon">💬</div><h3>Live Chat</h3><p>AI support assistant inside the app. Instant answers 24/7.</p><a href="/login" class="support-card-link">Open Chat in App</a></div>
       <div class="support-card reveal" style="transition-delay:0.15s;"><div class="support-card-icon">📖</div><h3>Help Center</h3><p>Step-by-step guides, tutorials, and tips.</p><a href="#faq" class="support-card-link">Browse FAQ</a></div>
     </div>
     <div class="community-banner reveal">
-      <div class="community-banner-text"><h3>Join the Sortifi Community 🇮🇳</h3><p>Connect with thousands of Indian professionals using Sortifi.</p></div>
+      <div class="community-banner-text"><h3>Join the Cluedox Community 🇮🇳</h3><p>Connect with thousands of Indian professionals using Cluedox.</p></div>
       <div class="community-banner-actions">
-        <a href="https://twitter.com/Sortifiapp" target="_blank" rel="noopener" class="btn-community primary">🐦 Follow on X</a>
-        <a href="mailto:founders@Sortifi.in?subject=Community%20Access" class="btn-community outline">📩 Request Access</a>
+        <a href="https://twitter.com/Cluedoxapp" target="_blank" rel="noopener" class="btn-community primary">🐦 Follow on X</a>
+        <a href="mailto:founders@Cluedox.in?subject=Community%20Access" class="btn-community outline">📩 Request Access</a>
       </div>
     </div>
   </div>
@@ -694,7 +694,7 @@ const LANDING_HTML = `
   <div class="cta-inner">
     <div class="cta-badge reveal">NOW LIVE</div>
     <h2 class="cta-title reveal" style="transition-delay:0.1s;">Start managing your documents intelligently — for free.</h2>
-    <p class="cta-sub reveal" style="transition-delay:0.2s;">Join thousands of Indian professionals using Sortifi. Your data stays private — always.</p>
+    <p class="cta-sub reveal" style="transition-delay:0.2s;">Join thousands of Indian professionals using Cluedox. Your data stays private — always.</p>
     <div class="reveal" style="transition-delay:0.3s;display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
       <a href="/login" class="btn-primary" style="font-size:17px;padding:16px 40px;">Create Free Account →</a>
     </div>
@@ -706,9 +706,9 @@ const LANDING_HTML = `
   <div class="container">
     <div class="footer-top"></div>
     <div class="footer-grid">
-      <div><div class="footer-logo"><div class="nav-logo-dot"></div>Sortifi</div><p class="footer-tagline">Intelligent File Management, Reimagined</p><p class="footer-copy">© 2026 Sortifi. All rights reserved.</p><p class="footer-location">📍 Pune, India</p></div>
+      <div><div class="footer-logo"><div class="nav-logo-dot"></div>Cluedox</div><p class="footer-tagline">Intelligent File Management, Reimagined</p><p class="footer-copy">© 2026 Cluedox. All rights reserved.</p><p class="footer-location">📍 Pune, India</p></div>
       <div class="footer-col"><h5>Product</h5><a href="#features">Features</a><a href="#how">How It Works</a><a href="#security">Security</a><a href="#roadmap">Roadmap</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></div>
-      <div class="footer-col"><h5>Legal & Support</h5><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="#faq">FAQ</a><a href="#support">Help & Support</a><a href="mailto:founders@Sortifi.in" class="teal">founders@Sortifi.in</a><a href="https://twitter.com/Sortifiapp" target="_blank" rel="noopener">Twitter / X</a></div>
+      <div class="footer-col"><h5>Legal & Support</h5><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="#faq">FAQ</a><a href="#support">Help & Support</a><a href="mailto:founders@Cluedox.in" class="teal">founders@Cluedox.in</a><a href="https://twitter.com/Cluedoxapp" target="_blank" rel="noopener">Twitter / X</a></div>
     </div>
   </div>
 </footer>
@@ -760,13 +760,13 @@ function initLandingScripts(root: HTMLElement) {
 
   // Dark mode toggle
   const themeToggle = root.querySelector('#themeToggle') as HTMLElement;
-  const savedTheme = localStorage.getItem('Sortifi-landing-theme') || 'light';
+  const savedTheme = localStorage.getItem('Cluedox-landing-theme') || 'light';
   root.setAttribute('data-theme', savedTheme);
   themeToggle?.addEventListener('click', () => {
     const current = root.getAttribute('data-theme');
     const next = current === 'dark' ? 'light' : 'dark';
     root.setAttribute('data-theme', next);
-    localStorage.setItem('Sortifi-landing-theme', next);
+    localStorage.setItem('Cluedox-landing-theme', next);
   });
 
   // Scroll progress
@@ -854,7 +854,7 @@ const CinematicHero = () => {
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setStep(1), 4000), 
+      setTimeout(() => setStep(1), 4000),
       setTimeout(() => setStep(2), 5000),
       setTimeout(() => setStep(3), 10000),
       setTimeout(() => setStep(4), 11000),
@@ -879,9 +879,9 @@ const CinematicHero = () => {
             className="text-center max-w-4xl"
           >
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight tracking-tight text-[#E4EDF8]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
-              Every day, professionals lose <br/>
+              Every day, professionals lose <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2DD4E8] to-[#13C5C5]">1.8 hours</span>
-              <br/>searching for files they already have.
+              <br />searching for files they already have.
             </h1>
           </motion.div>
         )}
@@ -927,7 +927,7 @@ const CinematicHero = () => {
             className="text-center z-10"
           >
             <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-[#13C5C5]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
-              Try Sortifi
+              Try Cluedox
             </h1>
           </motion.div>
         )}
@@ -946,7 +946,7 @@ const CinematicHero = () => {
               The intelligent system that makes losing documents <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2DD4E8] to-[#13C5C5]">a thing of the past.</span>
             </h1>
             <p className="text-lg md:text-xl text-[#E4EDF8]/70 max-w-2xl mb-12 leading-relaxed">
-              Sortifi securely organizes every document you own — automatically. Search by meaning, find what you need instantly, get reminded before deadlines, and never lose a file again. <strong>Your data stays private — always.</strong>
+              Cluedox securely organizes every document you own — automatically. Search by meaning, find what you need instantly, get reminded before deadlines, and never lose a file again. <strong>Your data stays private — always.</strong>
             </p>
             <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-6">
               <a href="/login" className="bg-[#13C5C5] hover:bg-[#0E879B] text-white px-8 py-4 rounded-xl font-semibold text-lg hover:scale-105 transition-transform shadow-[0_0_30px_rgba(19,197,197,0.4)]">

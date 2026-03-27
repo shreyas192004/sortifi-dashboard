@@ -21,14 +21,14 @@ const TermsPage = () => {
             <section>
               <h2 className="text-xl font-semibold mb-3">1. Acceptance of Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                By creating an account or using Sortifi, you agree to these Terms of Service. If you do not agree, please do not use the service. We may update these terms from time to time — continued use constitutes acceptance.
+                By creating an account or using Cluedox, you agree to these Terms of Service. If you do not agree, please do not use the service. We may update these terms from time to time — continued use constitutes acceptance.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold mb-3">2. Service Description</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Sortifi is a secure document management platform that provides file storage, automated organization (summarization, smart tagging), smart search, expiry reminders, and document sharing. Features vary by plan.
+                Cluedox is a secure document management platform that provides file storage, automated organization (summarization, smart tagging), smart search, expiry reminders, and document sharing. Features vary by plan.
               </p>
             </section>
 
@@ -56,7 +56,7 @@ const TermsPage = () => {
             <section>
               <h2 className="text-xl font-semibold mb-3">6. Intellectual Property</h2>
               <p className="text-muted-foreground leading-relaxed">
-                You retain full ownership of files you upload. By uploading, you grant Sortifi a limited license to process your files for the purpose of providing the service (generating search tags and summaries). We claim no ownership of your content.
+                You retain full ownership of files you upload. By uploading, you grant Cluedox a limited license to process your files for the purpose of providing the service (generating search tags and summaries). We claim no ownership of your content.
               </p>
             </section>
 
@@ -77,7 +77,7 @@ const TermsPage = () => {
             <section>
               <h2 className="text-xl font-semibold mb-3">9. Limitation of Liability</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Sortifi is provided "as is." We are not liable for indirect, incidental, or consequential damages. Our total liability is limited to the amount you paid in the 12 months preceding the claim. Automatically generated tags and summaries are provided for convenience and may contain inaccuracies.
+                Cluedox is provided "as is." We are not liable for indirect, incidental, or consequential damages. Our total liability is limited to the amount you paid in the 12 months preceding the claim. Automatically generated tags and summaries are provided for convenience and may contain inaccuracies.
               </p>
             </section>
 
@@ -85,7 +85,7 @@ const TermsPage = () => {
               <h2 className="text-xl font-semibold mb-3">10. Governing Law</h2>
               <p className="text-muted-foreground leading-relaxed">
                 These terms are governed by the laws of India. Disputes shall be resolved in the courts of Pune, Maharashtra. For questions, contact{" "}
-                <a href="mailto:founders@Sortifi.in" className="text-primary hover:underline">founders@Sortifi.in</a>.
+                <a href="mailto:founders@Cluedox.in" className="text-primary hover:underline">founders@Cluedox.in</a>.
               </p>
             </section>
           </div>

@@ -18,7 +18,7 @@ interface AutocompleteProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const SEARCH_HISTORY_KEY = "Sortifi_search_history";
+const SEARCH_HISTORY_KEY = "Cluedox_search_history";
 const MAX_HISTORY = 8;
 
 function getSearchHistory(): string[] {
@@ -86,8 +86,8 @@ export const SearchAutocomplete = ({
   const allItems = isOpen && suggestions.length > 0
     ? suggestions.map(s => s.label)
     : showHistory
-    ? [...history, ...exampleQueries.map(e => e.label)]
-    : [];
+      ? [...history, ...exampleQueries.map(e => e.label)]
+      : [];
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (allItems.length === 0) return;

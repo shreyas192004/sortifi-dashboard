@@ -82,7 +82,7 @@ serve(async (req) => {
       const msgLower = messageText.toLowerCase();
       if (msgLower === "sort") {
         await sendText(msg91Key, integratedNumber, cleanPhone,
-          "👋 Welcome to Sortifi!\n\nTo use WhatsApp features, please link your account:\n1. Open Sortifi app → Settings → WhatsApp\n2. Enter your number and verify the code sent here");
+          "👋 Welcome to Cluedox!\n\nTo use WhatsApp features, please link your account:\n1. Open Cluedox app → Settings → WhatsApp\n2. Enter your number and verify the code sent here");
       }
       return jsonOk({ ok: true });
     }
@@ -230,7 +230,7 @@ async function sendMainMenu(authKey: string, intNum: string, phone: string) {
       type: "interactive",
       interactive: {
         type: "button",
-        body: { text: "👋 *Welcome to Sortifi!*\n\nWhat would you like to do?" },
+        body: { text: "👋 *Welcome to Cluedox!*\n\nWhat would you like to do?" },
         action: {
           buttons: [
             { type: "reply", reply: { id: "search", title: "🔍 Search Files" } },
@@ -244,7 +244,7 @@ async function sendMainMenu(authKey: string, intNum: string, phone: string) {
 
   if (!ok) {
     await sendText(authKey, intNum, phone,
-      "👋 *Welcome to Sortifi!*\n\n*1.* 🔍 Search files\n*2.* 📤 Upload a file\n*3.* 📊 View stats\n*4.* 📂 Recent files\n*5.* ❓ Help\n\n📌 *Reply with a number*");
+      "👋 *Welcome to Cluedox!*\n\n*1.* 🔍 Search files\n*2.* 📤 Upload a file\n*3.* 📊 View stats\n*4.* 📂 Recent files\n*5.* ❓ Help\n\n📌 *Reply with a number*");
   }
 }
 
@@ -375,7 +375,7 @@ async function handleMenuChoice(
 
   if (choiceId === "help") {
     await sendTextWithMenuButton(authKey, intNum, phone,
-      "🤖 *Sortifi Help*\n\n🔍 Search — Find files by name or content\n📤 Upload — Send any file to auto-categorize\n📊 Stats — View your file count\n📂 Recent — See last uploads\n💬 Ask — Ask AI questions about any file\n\nType *sort* anytime to open the menu.");
+      "🤖 *Cluedox Help*\n\n🔍 Search — Find files by name or content\n📤 Upload — Send any file to auto-categorize\n📊 Stats — View your file count\n📂 Recent — See last uploads\n💬 Ask — Ask AI questions about any file\n\nType *sort* anytime to open the menu.");
     await resetSession(supabase, phone, userId);
     return jsonOk({ ok: true });
   }
@@ -526,7 +526,7 @@ Keywords: ${fileRecord.semantic_keywords || "N/A"}`;
   const messages = [
     {
       role: "system",
-      content: `You are Sortifi AI assistant. Answer questions about the user's document concisely. Use the file context below.\n\n${fileContext}`,
+      content: `You are Cluedox AI assistant. Answer questions about the user's document concisely. Use the file context below.\n\n${fileContext}`,
     },
     ...chatHistory.slice(-6),
     { role: "user", content: question },
@@ -708,7 +708,7 @@ async function handleSearch(
     const entities = Array.isArray(f.entities) ? f.entities.slice(0, 3) : [];
     const entityStr = entities.map((e: any) => e.value || e.label).filter(Boolean).join(", ");
     const typeEmoji = getFileTypeEmoji(f.file_type);
-    
+
     listMsg += `*${i + 1}.* ${typeEmoji} ${f.file_name}\n`;
     if (summary) listMsg += `   📝 _${summary}_\n`;
     if (entityStr) listMsg += `   🏷️ _${entityStr}_\n`;

@@ -33,7 +33,7 @@ serve(async (req) => {
     if (!phone || !code) throw new Error("Missing phone or code");
 
     // Send OTP via MSG91 WhatsApp
-    const text = `🔐 Your Sortifi verification code is: *${code}*\n\nEnter this code in the Sortifi app to link your WhatsApp.`;
+    const text = `🔐 Your Cluedox verification code is: *${code}*\n\nEnter this code in the Cluedox app to link your WhatsApp.`;
     const url = `${MSG91_API}/whatsapp-outbound-message/?integrated_number=${encodeURIComponent(integratedNumber)}&content_type=text&recipient_number=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`;
 
     const resp = await fetch(url, {

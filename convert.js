@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
 
-const htmlContent = fs.readFileSync('sortifi-complete (1) (1).html', 'utf-8');
+const htmlContent = fs.readFileSync('Cluedox-complete (1) (1).html', 'utf-8');
 
 const dom = new JSDOM(htmlContent);
 const document = dom.window.document;
@@ -10,7 +10,7 @@ const document = dom.window.document;
 const styles = document.querySelectorAll('style');
 let cssContent = '';
 styles.forEach(s => cssContent += s.textContent + '\n');
-fs.writeFileSync('src/pages/SortifiLandingPage.css', cssContent);
+fs.writeFileSync('src/pages/CluedoxLandingPage.css', cssContent);
 
 // 2. Extract JS
 const scripts = document.querySelectorAll('script');
@@ -22,7 +22,7 @@ scripts.forEach(s => {
 });
 
 // 3. Process HTML to JSX
-const bodyNodes = Array.from(document.body.childNodes).filter(node => 
+const bodyNodes = Array.from(document.body.childNodes).filter(node =>
   node.nodeType === 1 && node.tagName !== 'SCRIPT'
 );
 
@@ -65,7 +65,7 @@ function nodeToJsx(node) {
   Array.from(node.attributes).forEach(attr => {
     let name = attr.name;
     let value = attr.value;
-    
+
     if (name === 'class') name = 'className';
     else if (name === 'for') name = 'htmlFor';
     else if (name === 'readonly') name = 'readOnly';
@@ -75,7 +75,7 @@ function nodeToJsx(node) {
     else if (name === 'stroke-dashoffset') name = 'strokeDashoffset';
     else if (name === 'stroke-width') name = 'strokeWidth';
     else if (name === 'stroke-linecap') name = 'strokeLinecap';
-    
+
     if (name === 'style') {
       attrs += ` style={${parseStyle(value)}}`;
     } else if (name === 'readonly' || name === 'readOnly') {
@@ -85,7 +85,7 @@ function nodeToJsx(node) {
       attrs += ` ${name}="\${value.replace(/"/g, '&quot;')}"`;
     }
   });
-  
+
   // self-closing tags
   const selfClosing = ['img', 'br', 'hr', 'input', 'meta', 'link', 'path'];
   if (selfClosing.includes(tagName)) {
@@ -111,11 +111,11 @@ let tsxContent = `
 import React, { useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import './SortifiLandingPage.css';
+import './CluedoxLandingPage.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function SortifiLandingPage() {
+export default function CluedoxLandingPage() {
   useEffect(() => {
     // We wrap all the vanilla JS animation logic in a context
     let ctx = gsap.context(() => {
@@ -126,12 +126,12 @@ export default function SortifiLandingPage() {
   }, []);
 
   return (
-    <div className="sortifi-landing-page">
+    <div className="Cluedox-landing-page">
       ${jsxHtml}
     </div>
   );
 }
 `;
 
-fs.writeFileSync('src/pages/SortifiLandingPage.tsx', tsxContent);
-console.log('Successfully generated src/pages/SortifiLandingPage.tsx and src/pages/SortifiLandingPage.css');
+fs.writeFileSync('src/pages/CluedoxLandingPage.tsx', tsxContent);
+console.log('Successfully generated src/pages/CluedoxLandingPage.tsx and src/pages/CluedoxLandingPage.css');

@@ -28,7 +28,7 @@ const DPRPage = () => {
             <FileText className="w-4 h-4" /> Detailed Project Report
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Sortifi — AI File Manager
+            Cluedox — AI File Manager
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             An intelligent cloud-based document management system powered by AI for automated organization, smart categorization, and instant retrieval.
@@ -55,10 +55,10 @@ const DPRPage = () => {
           <h2 className="text-2xl font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" /> 1. Executive Summary</h2>
           <div className="p-6 rounded-xl bg-card border border-border space-y-4">
             <p className="text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">Sortifi</strong> is an AI-powered cloud file management platform designed for individuals and small businesses who deal with high volumes of documents — invoices, contracts, identity proofs, certificates, and more. The platform automates the traditionally manual process of organizing, tagging, searching, and tracking documents.
+              <strong className="text-foreground">Cluedox</strong> is an AI-powered cloud file management platform designed for individuals and small businesses who deal with high volumes of documents — invoices, contracts, identity proofs, certificates, and more. The platform automates the traditionally manual process of organizing, tagging, searching, and tracking documents.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              Unlike generic cloud storage solutions (Google Drive, Dropbox), Sortifi <strong className="text-foreground">securely organizes document content</strong>. Upon upload, our system automatically categorizes files, identifies entities (dates, amounts, names, ID numbers), generates summaries, assigns smart tags, and detects expiry dates. Users can then search across their entire document library using natural language, compare documents side-by-side, chat with their files using AI, and access documents via WhatsApp.
+              Unlike generic cloud storage solutions (Google Drive, Dropbox), Cluedox <strong className="text-foreground">securely organizes document content</strong>. Upon upload, our system automatically categorizes files, identifies entities (dates, amounts, names, ID numbers), generates summaries, assigns smart tags, and detects expiry dates. Users can then search across their entire document library using natural language, compare documents side-by-side, chat with their files using AI, and access documents via WhatsApp.
             </p>
             <div className="grid sm:grid-cols-3 gap-4 pt-2">
               <div className="p-4 rounded-lg bg-primary/5 border border-primary/10 text-center">
@@ -109,7 +109,7 @@ const DPRPage = () => {
           <h2 className="text-2xl font-bold flex items-center gap-2"><Zap className="w-5 h-5 text-primary" /> 3. Solution Overview</h2>
           <div className="p-6 rounded-xl bg-card border border-border space-y-4">
             <p className="text-muted-foreground leading-relaxed">
-              Sortifi provides an end-to-end intelligent document management platform with the following core value propositions:
+              Cluedox provides an end-to-end intelligent document management platform with the following core value propositions:
             </p>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
@@ -261,9 +261,9 @@ const DPRPage = () => {
                 icon: HardDrive, title: "Google Drive Integration",
                 features: [
                   "OAuth 2.0 connection with secure token management",
-                  "Browse Google Drive folders within Sortifi",
+                  "Browse Google Drive folders within Cluedox",
                   "Import files from Drive with automatic AI analysis",
-                  "Export Sortifi files back to Google Drive",
+                  "Export Cluedox files back to Google Drive",
                   "Automatic token refresh for uninterrupted access",
                 ]
               },
@@ -493,7 +493,7 @@ const DPRPage = () => {
 
         {/* Footer */}
         <section className="text-center py-8 border-t border-border space-y-2">
-          <p className="text-sm text-muted-foreground">Sortifi — Detailed Project Report V1.0</p>
+          <p className="text-sm text-muted-foreground">Cluedox — Detailed Project Report V1.0</p>
           <p className="text-xs text-muted-foreground">Generated March 2026 • Confidential</p>
         </section>
       </div>

@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const SYSTEM_PROMPT = `You are Sortifi's friendly support assistant. Help users with questions about Sortifi, an AI-powered file management app.
+    const SYSTEM_PROMPT = `You are Cluedox's friendly support assistant. Help users with questions about Cluedox, an AI-powered file management app.
 
 Key features:
 - AI auto-tagging, summaries, entity extraction on every upload

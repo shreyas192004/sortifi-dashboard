@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const ONBOARDING_GUIDE_KEY = "Sortifi_onboarding_guide";
+const ONBOARDING_GUIDE_KEY = "Cluedox_onboarding_guide";
 
 interface OnboardingGuideState {
   completedSteps: string[];

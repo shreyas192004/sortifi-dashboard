@@ -27,7 +27,7 @@ serve(async (req) => {
 
     // Fetch file context for the user
     const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    
+
     let fileContext = "";
     if (fileIds && fileIds.length > 0) {
       const { data: files } = await serviceClient
@@ -37,7 +37,7 @@ serve(async (req) => {
         .eq("user_id", user.id);
 
       if (files) {
-        fileContext = files.map(f => 
+        fileContext = files.map(f =>
           `--- FILE: ${f.file_name} ---\nSummary: ${f.ai_summary || 'N/A'}\nExtracted Text: ${(f.extracted_text || '').substring(0, 3000)}\nEntities: ${JSON.stringify(f.entities || [])}\nExpiry: ${f.expiry_date || 'None'}\nKeywords: ${f.semantic_keywords || 'N/A'}`
         ).join("\n\n");
       }
@@ -51,13 +51,13 @@ serve(async (req) => {
         .limit(20);
 
       if (files) {
-        fileContext = files.map(f => 
+        fileContext = files.map(f =>
           `--- FILE: ${f.file_name} ---\nSummary: ${f.ai_summary || 'N/A'}\nExtracted Text: ${(f.extracted_text || '').substring(0, 1500)}\nEntities: ${JSON.stringify(f.entities || [])}\nExpiry: ${f.expiry_date || 'None'}`
         ).join("\n\n");
       }
     }
 
-    const systemPrompt = `You are Sortifi AI, a smart document assistant. You help users find information across their uploaded documents.
+    const systemPrompt = `You are Cluedox AI, a smart document assistant. You help users find information across their uploaded documents.
 
 You have access to the user's documents below. Answer questions accurately based on the document content. If asked about specific details (dates, amounts, names), cite which document the info is from.
 

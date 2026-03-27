@@ -161,7 +161,7 @@ const OnboardingPage = () => {
 
       if (error) throw error;
 
-      toast.success("Welcome to Sortifi! 🎉");
+      toast.success("Welcome to Cluedox! 🎉");
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
       toast.error(err.message || "Failed to save profile");
@@ -196,7 +196,7 @@ const OnboardingPage = () => {
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Zap className="w-5 h-5 text-primary" />
           </div>
-          <span className="text-xl font-bold gradient-text">Sortifi</span>
+          <span className="text-xl font-bold gradient-text">Cluedox</span>
         </motion.div>
 
         {/* Progress */}
@@ -204,13 +204,12 @@ const OnboardingPage = () => {
           {steps.map((s, i) => (
             <div key={i} className="flex items-center gap-2">
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                  i < step
+                className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${i < step
                     ? "bg-primary text-primary-foreground"
                     : i === step
-                    ? "bg-primary/20 text-primary border-2 border-primary"
-                    : "bg-secondary text-muted-foreground"
-                }`}
+                      ? "bg-primary/20 text-primary border-2 border-primary"
+                      : "bg-secondary text-muted-foreground"
+                  }`}
               >
                 {i < step ? <Check className="w-4 h-4" /> : i + 1}
               </div>
@@ -292,7 +291,7 @@ const OnboardingPage = () => {
                   <div>
                     <Label className="text-xs font-medium mb-1.5 block">Primary Use Case</Label>
                     <Select value={form.use_case} onValueChange={(v) => update("use_case", v)}>
-                      <SelectTrigger><SelectValue placeholder="How will you use Sortifi?" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="How will you use Cluedox?" /></SelectTrigger>
                       <SelectContent>
                         {useCases.map((u) => (
                           <SelectItem key={u} value={u}>{u}</SelectItem>

@@ -23,9 +23,9 @@ interface Message {
   sender: "ai" | "user";
 }
 
-const SYSTEM_PROMPT = `You are Sortifi's support assistant. You help users with questions about the Sortifi AI File Manager app.
+const SYSTEM_PROMPT = `You are Cluedox's support assistant. You help users with questions about the Cluedox AI File Manager app.
 
-Key features of Sortifi:
+Key features of Cluedox:
 - AI-powered file management: auto-tagging, summaries, entity extraction
 - 10+ search methods: keyword, natural language, semantic, date, entity search
 - Smart reminders with expiry date detection
@@ -47,7 +47,7 @@ export function SupportChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      content: "Hi! 👋 I'm Sortifi's AI assistant. Ask me anything about our features, pricing, or how to use the app!",
+      content: "Hi! 👋 I'm Cluedox's AI assistant. Ask me anything about our features, pricing, or how to use the app!",
       sender: "ai",
     },
   ]);
@@ -112,7 +112,7 @@ export function SupportChat() {
             <Bot className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold">Sortifi Support</h3>
+            <h3 className="text-sm font-semibold">Cluedox Support</h3>
             <p className="text-xs text-muted-foreground">Ask me anything</p>
           </div>
         </div>

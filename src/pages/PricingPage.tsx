@@ -167,7 +167,7 @@ const PricingPage = () => {
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Zap className="w-4 h-4 text-primary" />
             </div>
-            <span className="text-lg font-bold gradient-text">Sortifi</span>
+            <span className="text-lg font-bold gradient-text">Cluedox</span>
           </button>
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={() => navigate("/login")} className="text-sm">
@@ -267,9 +267,9 @@ const PricingPage = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-primary" />
-            <span className="text-sm font-bold gradient-text">Sortifi</span>
+            <span className="text-sm font-bold gradient-text">Cluedox</span>
           </div>
-          <p className="text-xs text-muted-foreground">© 2026 Sortifi. AI-Powered File Intelligence.</p>
+          <p className="text-xs text-muted-foreground">© 2026 Cluedox. AI-Powered File Intelligence.</p>
         </div>
       </footer>
 

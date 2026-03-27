@@ -22,7 +22,7 @@ serve(async (req) => {
     if (!lovableApiKey) throw new Error("LOVABLE_API_KEY not configured");
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
+
     const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await anonClient.auth.getUser(token);
@@ -143,7 +143,7 @@ serve(async (req) => {
     }
 
     // Build system prompt with multilingual + enhanced image analysis
-    const systemPrompt = `You are an expert document analysis AI for Sortifi. Extract MAXIMUM useful metadata.
+    const systemPrompt = `You are an expert document analysis AI for Cluedox. Extract MAXIMUM useful metadata.
 
 CRITICAL RULES:
 1. Generate a COMPREHENSIVE summary (5-8 sentences) with ALL key info: numbers, names, dates, amounts.

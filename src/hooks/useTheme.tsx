@@ -12,7 +12,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [isDark, setIsDark] = useState<boolean>(() => {
     // Always default to light mode
-    const saved = localStorage.getItem("Sortifi-theme");
+    const saved = localStorage.getItem("Cluedox-theme");
     if (saved) return saved === "dark";
     return false;
   });
@@ -24,7 +24,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       root.classList.remove("dark");
     }
-    localStorage.setItem("Sortifi-theme", isDark ? "dark" : "light");
+    localStorage.setItem("Cluedox-theme", isDark ? "dark" : "light");
   }, [isDark]);
 
   const toggleTheme = () => {

@@ -21,14 +21,14 @@ const PrivacyPolicyPage = () => {
             <section>
               <h2 className="text-xl font-semibold mb-3">1. Information We Collect</h2>
               <p className="text-muted-foreground leading-relaxed">
-                When you use Sortifi, we collect information you provide directly: your email address, name, company details (during onboarding), and the files you upload. Our system securely generates search tags and summaries for your files — this data is stored securely and associated with your account.
+                When you use Cluedox, we collect information you provide directly: your email address, name, company details (during onboarding), and the files you upload. Our system securely generates search tags and summaries for your files — this data is stored securely and associated with your account.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold mb-3">2. How We Use Your Information</h2>
               <p className="text-muted-foreground leading-relaxed">
-                We use your data to: provide and improve Sortifi's services, generate smart search tags for your files, send expiry reminders, authenticate your identity, and communicate service updates. We do <strong>not</strong> sell your data or use your files to train AI models.
+                We use your data to: provide and improve Cluedox's services, generate smart search tags for your files, send expiry reminders, authenticate your identity, and communicate service updates. We do <strong>not</strong> sell your data or use your files to train AI models.
               </p>
             </section>
 
@@ -42,7 +42,7 @@ const PrivacyPolicyPage = () => {
             <section>
               <h2 className="text-xl font-semibold mb-3">4. DPDP Act Compliance</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Sortifi complies with India's Digital Personal Data Protection Act 2023. You have the right to: access your data, correct inaccuracies, delete your account and all associated data, and withdraw consent at any time. Data processing is based on your explicit consent provided during registration.
+                Cluedox complies with India's Digital Personal Data Protection Act 2023. You have the right to: access your data, correct inaccuracies, delete your account and all associated data, and withdraw consent at any time. Data processing is based on your explicit consent provided during registration.
               </p>
             </section>
 
@@ -71,7 +71,7 @@ const PrivacyPolicyPage = () => {
               <h2 className="text-xl font-semibold mb-3">8. Contact Us</h2>
               <p className="text-muted-foreground leading-relaxed">
                 For privacy-related inquiries, data access/deletion requests, or complaints, contact us at{" "}
-                <a href="mailto:founders@Sortifi.in" className="text-primary hover:underline">founders@Sortifi.in</a>.
+                <a href="mailto:founders@Cluedox.in" className="text-primary hover:underline">founders@Cluedox.in</a>.
                 We respond within 72 hours.
               </p>
             </section>
