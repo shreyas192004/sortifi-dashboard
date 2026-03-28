@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { consumeAiBudget } from "../_shared/aiBudget.ts";
+import { mirrorFileToBackup } from "../_shared/backupMirror.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,80 @@ const corsHeaders = {
 
 const MAX_IMAGE_BASE64_SIZE = 8 * 1024 * 1024; // 8MB
 const MAX_PDF_BASE64_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20MB hard limit
+
+const SUPPORTED_MIME_CHECKS = [
+  "application/pdf",
+  "application/json",
+  "application/xml",
+  "text/",
+  "image/",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/csv",
+];
+
+function isSupportedMime(fileType: string) {
+  const normalized = String(fileType || "").toLowerCase();
+  return SUPPORTED_MIME_CHECKS.some((s) =>
+    s.endsWith("/") ? normalized.startsWith(s) : normalized === s,
+  );
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  options?: { attempts?: number; timeoutMs?: number; retryStatuses?: number[]; requestId?: string },
+) {
+  const attempts = options?.attempts ?? 2;
+  const timeoutMs = options?.timeoutMs ?? 55000;
+  const retryStatuses = options?.retryStatuses ?? [429, 502, 503, 504];
+
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const res = await fetch(url, { ...init, signal: controller.signal });
+      clearTimeout(timeout);
+
+      if (retryStatuses.includes(res.status) && attempt < attempts) {
+        const jitterMs = 500 + Math.floor(Math.random() * 1000);
+        console.warn("analyze-file transient provider status", {
+          requestId: options?.requestId,
+          status: res.status,
+          attempt,
+          jitterMs,
+        });
+        await sleep(jitterMs);
+        continue;
+      }
+
+      return res;
+    } catch (err) {
+      clearTimeout(timeout);
+      lastError = err;
+      if (attempt >= attempts) break;
+
+      const jitterMs = 500 + Math.floor(Math.random() * 1000);
+      console.warn("analyze-file transient provider network error", {
+        requestId: options?.requestId,
+        attempt,
+        jitterMs,
+      });
+      await sleep(jitterMs);
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("Provider request failed after retries");
+}
 
 function normalizeMetadata(metadata: any, fileName: string, fileContent: string) {
   const safe = metadata && typeof metadata === "object" ? { ...metadata } : {};
@@ -68,6 +143,7 @@ serve(async (req) => {
 
   let currentFileId: string | null = null;
   let currentFileName: string | null = null;
+  const requestId = crypto.randomUUID();
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -90,8 +166,17 @@ serve(async (req) => {
 
     const { fileId, fileName, fileType } = await req.json();
     if (!fileId || !fileName) throw new Error("Missing fileId or fileName");
+    if (!fileType || !isSupportedMime(fileType)) {
+      return new Response(JSON.stringify({ error: "Unsupported file type" }), {
+        status: 422,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     currentFileId = fileId;
     currentFileName = fileName;
+
+    console.log("analyze-file request start", { requestId, fileId, fileName, fileType });
 
     // Set file status to 'analysing'
     await supabase.from("files").update({ file_status: "analysing" }).eq("id", fileId);
@@ -117,6 +202,14 @@ serve(async (req) => {
       const arrayBuffer = await fileData.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
       const fileSize = bytes.length;
+
+      if (fileSize > MAX_FILE_SIZE_BYTES) {
+        await supabase.from("files").update({ file_status: "error" }).eq("id", fileId);
+        return new Response(JSON.stringify({ error: "File too large. Max 20MB." }), {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       if (isImage) {
         useVisionModel = true;
@@ -290,7 +383,7 @@ CRITICAL: "extracted_text" must contain ALL key text verbatim. Include dates in 
     if (lovableApiKey) {
       const model = useVisionModel ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
 
-      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const aiResponse = await fetchWithRetry("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${lovableApiKey}`,
@@ -349,7 +442,7 @@ CRITICAL: "extracted_text" must contain ALL key text verbatim. Include dates in 
           ],
           tool_choice: { type: "function", function: { name: "extract_metadata" } },
         }),
-      });
+      }, { attempts: 2, timeoutMs: 55000, requestId });
 
       if (!aiResponse.ok) {
         const errorText = await aiResponse.text();
@@ -399,7 +492,7 @@ CRITICAL: "extracted_text" must contain ALL key text verbatim. Include dates in 
       }
 
       const geminiModel = "gemini-2.5-flash-lite";
-      const geminiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${encodeURIComponent(googleAiKey!)}`, {
+      const geminiResp = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${encodeURIComponent(googleAiKey!)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -411,7 +504,7 @@ CRITICAL: "extracted_text" must contain ALL key text verbatim. Include dates in 
             maxOutputTokens: 2500,
           },
         }),
-      });
+      }, { attempts: 2, timeoutMs: 55000, requestId });
 
       if (!geminiResp.ok) {
         const errorText = await geminiResp.text();
@@ -519,11 +612,20 @@ CRITICAL: "extracted_text" must contain ALL key text verbatim. Include dates in 
       );
     }
 
+    const mirrorResult = await mirrorFileToBackup({
+      primarySupabaseUrl: supabaseUrl,
+      primaryServiceRoleKey: supabaseServiceKey,
+      fileId,
+    });
+    if (!mirrorResult.ok) {
+      console.warn("backup mirror skipped or failed", { requestId, fileId, reason: mirrorResult.reason });
+    }
+
     return new Response(JSON.stringify({ success: true, metadata }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("analyze-file error:", e);
+    console.error("analyze-file error:", { requestId, error: e instanceof Error ? e.message : String(e) });
 
     // For any runtime failure after file identification, always return a safe fallback
     // to prevent client-facing 500 errors during upload/reanalyze flows.
@@ -542,6 +644,15 @@ CRITICAL: "extracted_text" must contain ALL key text verbatim. Include dates in 
             file_status: "ready",
           })
           .eq("id", currentFileId);
+
+        const mirrorResult = await mirrorFileToBackup({
+          primarySupabaseUrl: supabaseUrl,
+          primaryServiceRoleKey: supabaseServiceKey,
+          fileId: currentFileId,
+        });
+        if (!mirrorResult.ok) {
+          console.warn("backup mirror skipped or failed", { requestId, fileId: currentFileId, reason: mirrorResult.reason });
+        }
 
         return new Response(JSON.stringify({
           success: true,

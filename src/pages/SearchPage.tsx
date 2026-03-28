@@ -105,7 +105,21 @@ const SearchPage = () => {
     }
     setHybridLoading(true);
     try {
+      let {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        session = refreshed.session;
+      }
+
+      if (!session?.access_token) {
+        throw new Error("Session expired. Please sign in again.");
+      }
+
       const { data, error } = await supabase.functions.invoke("hybrid-search", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: { query: q },
       });
       if (error) throw error;
@@ -114,6 +128,10 @@ const SearchPage = () => {
       setHybridExpandedTerms(data?.expandedTerms || []);
     } catch (e) {
       console.error("Hybrid search error:", e);
+      const status = (e as any)?.context?.status ?? (e as any)?.status;
+      if (status === 401) {
+        toast.error("Search session expired. Please sign in again.");
+      }
       // Fall back to client-side search
       setHybridResults([]);
     } finally {

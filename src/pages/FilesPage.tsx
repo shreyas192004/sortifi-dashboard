@@ -140,8 +140,19 @@ const FilesPage = () => {
   const handleRenameFile = async () => {
     if (!renamingFile || !renameFileName.trim()) { setRenamingFile(null); return; }
     try {
-      const { error } = await supabase.from("files").update({ file_name: renameFileName.trim() }).eq("id", renamingFile.id);
+      const fileId = renamingFile.id;
+      const { error } = await supabase.from("files").update({ file_name: renameFileName.trim() }).eq("id", fileId);
       if (error) throw error;
+
+      supabase.functions
+        .invoke("backup-file", { body: { fileId } })
+        .then(({ error: backupError }) => {
+          if (backupError) console.warn("backup sync warning after rename:", backupError.message || backupError);
+        })
+        .catch((backupErr) => {
+          console.warn("backup sync failed after rename:", backupErr);
+        });
+
       queryClient.invalidateQueries({ queryKey: ["files"] });
       toast.success(`Renamed to "${renameFileName.trim()}"`);
       setRenamingFile(null);

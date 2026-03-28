@@ -146,6 +146,16 @@ export function useFileUpload() {
 
       if (insertError) throw insertError;
 
+      // Fire-and-forget backup sync so primary flow stays fast.
+      supabase.functions
+        .invoke("backup-file", { body: { fileId: fileRecord.id } })
+        .then(({ error }) => {
+          if (error) console.warn("backup-file invoke warning:", error.message || error);
+        })
+        .catch((backupErr) => {
+          console.warn("backup-file invoke failed:", backupErr);
+        });
+
       setFiles((prev) => prev.map((f) => f.id === uploadFile.id ? { ...f, progress: 80, status: "processing" as const, fileStatus: "analysing" } : f));
 
       // Trigger AI analysis (will set file_status to 'analysing' then 'ready')

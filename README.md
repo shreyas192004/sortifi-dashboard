@@ -71,3 +71,25 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Primary Lovable + Backup Supabase Setup
+
+Use Lovable Supabase as primary (live app) and mirror file backups to your own Supabase.
+
+1. Frontend env must point to the Lovable project.
+2. In the primary Supabase project, set Edge Function secrets:
+	- `BACKUP_SUPABASE_URL`
+	- `BACKUP_SUPABASE_SERVICE_ROLE_KEY`
+3. Deploy edge functions:
+	- `analyze-file`
+	- `backup-file`
+4. Ensure the backup project has matching tables/bucket used by file sync:
+	- `files`, `tags`, `file_tags`
+	- storage bucket `files`
+
+Behavior implemented:
+- Upload creates the primary file record and triggers `backup-file` mirror.
+- Analyze/re-analyze mirrors updated metadata and tags to backup.
+- Rename triggers backup re-sync for the same file.
+
+If backup secrets are missing, the app continues on primary and logs a non-blocking warning.

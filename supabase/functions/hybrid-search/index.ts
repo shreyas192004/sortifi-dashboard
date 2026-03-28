@@ -29,17 +29,27 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableApiKey) throw new Error("LOVABLE_API_KEY not configured");
+    const canUseAiGateway = Boolean(lovableApiKey);
 
     const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await anonClient.auth.getUser(token);
-    if (userError || !user) throw new Error("Unauthorized");
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabase = createClient(supabaseUrl, serviceKey);
     const { query } = await req.json();
@@ -60,57 +70,59 @@ serve(async (req) => {
 
     // ── Step 2: AI Query Expansion ──
     let expandedTerms = "";
-    try {
-      const expandWithinBudget = await consumeAiBudget(supabase, 0.06, 100);
-      if (!expandWithinBudget) {
-        return new Response(JSON.stringify({ error: "Monthly AI budget limit reached (₹100)", results: [], total: 0 }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const expandResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${lovableApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [
-            {
-              role: "system",
-              content: `Generate 10-15 search synonyms/related terms for the query. Include Hindi equivalents. Return comma-separated terms only.`,
-            },
-            { role: "user", content: query },
-          ],
-          tools: [{
-            type: "function",
-            function: {
-              name: "return_terms",
-              description: "Return expanded terms",
-              parameters: {
-                type: "object",
-                properties: { terms: { type: "array", items: { type: "string" } } },
-                required: ["terms"],
-                additionalProperties: false,
-              },
-            },
-          }],
-          tool_choice: { type: "function", function: { name: "return_terms" } },
-        }),
-      });
-
-      if (expandResp.ok) {
-        const expandData = await expandResp.json();
-        const toolCall = expandData.choices?.[0]?.message?.tool_calls?.[0];
-        if (toolCall) {
-          const { terms } = JSON.parse(toolCall.function.arguments);
-          expandedTerms = (terms || []).join(" ");
+    if (canUseAiGateway) {
+      try {
+        const expandWithinBudget = await consumeAiBudget(supabase, 0.06, 100);
+        if (!expandWithinBudget) {
+          return new Response(JSON.stringify({ error: "Monthly AI budget limit reached (₹100)", results: [], total: 0 }), {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
+
+        const expandResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${lovableApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-lite",
+            messages: [
+              {
+                role: "system",
+                content: `Generate 10-15 search synonyms/related terms for the query. Include Hindi equivalents. Return comma-separated terms only.`,
+              },
+              { role: "user", content: query },
+            ],
+            tools: [{
+              type: "function",
+              function: {
+                name: "return_terms",
+                description: "Return expanded terms",
+                parameters: {
+                  type: "object",
+                  properties: { terms: { type: "array", items: { type: "string" } } },
+                  required: ["terms"],
+                  additionalProperties: false,
+                },
+              },
+            }],
+            tool_choice: { type: "function", function: { name: "return_terms" } },
+          }),
+        });
+
+        if (expandResp.ok) {
+          const expandData = await expandResp.json();
+          const toolCall = expandData.choices?.[0]?.message?.tool_calls?.[0];
+          if (toolCall) {
+            const { terms } = JSON.parse(toolCall.function.arguments);
+            expandedTerms = (terms || []).join(" ");
+          }
+        }
+      } catch (e) {
+        console.error("Query expansion error:", e);
       }
-    } catch (e) {
-      console.error("Query expansion error:", e);
     }
 
     // ── Step 3: PostgreSQL Full-Text Search + Trigram ──
@@ -159,7 +171,7 @@ serve(async (req) => {
       .slice(0, 15);
 
     // ── Step 5: AI Reranking of top results ──
-    if (mergedResults.length > 1) {
+    if (mergedResults.length > 1 && canUseAiGateway) {
       try {
         const rerankWithinBudget = await consumeAiBudget(supabase, 0.06, 100);
         if (!rerankWithinBudget) {
