@@ -211,27 +211,342 @@ export default function CluedoxLandingPage() {
       });
     });
 
-    /* ══ WIRE ANIMATION SCRIPT ══ */
-    const wireAnimWrapper = () => {
+    /* ══ WIRE ANIMATION (RESPONSIVE) ══ */
+    const mm = gsap.matchMedia();
 
-      /* ── CONFIG ── */
-      const WCARDS = [
-        { id: 'wcA', sc: { l: 4, t: 45 }, gc: { l: 2, t: 42 }, sr: -4, gr: -2 },
-        { id: 'wcB', sc: { l: 67, t: 38 }, gc: { l: 56, t: 44 }, sr: 5, gr: 3 },
-        { id: 'wcC', sc: { l: 7, t: 75 }, gc: { l: 24, t: 46 }, sr: 3, gr: 1 },
-        { id: 'wcD', sc: { l: 63, t: 70 }, gc: { l: 64, t: 43 }, sr: -4, gr: -2 },
-        { id: 'wcE', sc: { l: 36, t: 85 }, gc: { l: 40, t: 45 }, sr: 2, gr: 0 },
-      ];
-      const QUERY = 'Find my insurance renewal document';
+    /* ── WORD SLIDERS (DYNAMIC WIDTH) ── */
+    const initWordSliders = () => {
+      const sliders = document.querySelectorAll('.word-slider');
+      sliders.forEach(slider => {
+        const inner = slider.querySelector('.word-slider-inner') as HTMLElement;
+        const words = Array.from(inner.querySelectorAll('.ws-word')) as HTMLElement[];
+        if (words.length <= 1) return;
 
-      /* ── DOM ── */
+        const tl = gsap.timeline({ repeat: -1 });
+
+        // Build loop
+        for (let i = 0; i < words.length - 1; i++) {
+          const nextWord = words[i + 1];
+
+          tl.to({}, { duration: 1.8 }) // Wait on current
+            .to(inner, {
+              y: `-${(i + 1) * 1.1}em`,
+              duration: 0.9,
+              ease: "power3.inOut"
+            })
+            .to(slider, {
+              width: () => words[i + 1].offsetWidth,
+              duration: 0.9,
+              ease: "power3.inOut"
+            }, "<");
+        }
+
+        // Loop reset
+        tl.to({}, { duration: 1.8 })
+          .set(inner, { y: "0" })
+          .set(slider, { width: () => words[0].offsetWidth });
+      });
+    };
+
+    // Delay slightly to ensure fonts are ready for width measurement
+    setTimeout(initWordSliders, 200);
+
+    mm.add("(min-width: 1025px)", () => {
+      const wireAnimWrapper = () => {
+        /* ── CONFIG ── */
+        const WCARDS = [
+          { id: 'wcA', sc: { l: 4, t: 45 }, gc: { l: 2, t: 10 }, sr: -4, gr: -2 },
+          { id: 'wcB', sc: { l: 67, t: 38 }, gc: { l: 59, t: 12 }, sr: 5, gr: 3 },
+          { id: 'wcC', sc: { l: 7, t: 75 }, gc: { l: 24, t: 14 }, sr: 3, gr: 1 },
+          { id: 'wcD', sc: { l: 63, t: 70 }, gc: { l: 78, t: 9 }, sr: -4, gr: -2 },
+          { id: 'wcE', sc: { l: 36, t: 85 }, gc: { l: 42, t: 9 }, sr: 2, gr: 0 },
+        ];
+        const QUERY = 'Find my insurance renewal document';
+
+        const wstage = document.getElementById('wire-stage');
+        const wsbox = document.getElementById('wsbox');
+        const wcA = document.getElementById('wcA');
+        const compact = document.getElementById('wcA-compact');
+        const expanded = document.getElementById('wcA-expanded');
+        const wtoast = document.getElementById('wtoast');
+        const wcur = document.getElementById('wcur');
+        const whead = document.getElementById('wire-heading');
+
+        const WP = {
+          A: [document.getElementById('wpA'), document.getElementById('wpAg')],
+          B: [document.getElementById('wpB'), document.getElementById('wpBg')],
+          C: [document.getElementById('wpC'), document.getElementById('wpCg')],
+          D: [document.getElementById('wpD'), document.getElementById('wpDg')],
+          E: [document.getElementById('wpE'), document.getElementById('wpEg')],
+          V: [document.getElementById('wpV'), document.getElementById('wpVg')],
+        };
+
+        if (!wstage || !wsbox || !wcA) return;
+
+        const vw = p => p / 100 * window.innerWidth;
+        const vh = p => p / 100 * window.innerHeight;
+        const cl = (v, a, b) => Math.min(b, Math.max(a, v));
+        const pr = (p, a, b) => cl((p - a) / (b - a), 0, 1);
+        const eo = t => 1 - Math.pow(1 - t, 3);
+        const ei = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        const lp = (a, b, t) => a + (b - a) * t;
+
+        function rel(el: HTMLElement | null) {
+          if (!el) return { t: 0, l: 0, cx: 0, cy: 0, bcx: 0, tcx: 0, h: 0, w: 0 };
+          const t = el.offsetTop;
+          const l = el.offsetLeft;
+          const w = el.offsetWidth;
+          const h = el.offsetHeight;
+          return {
+            t, l, w, h,
+            cx: l + w / 2,
+            cy: t + h / 2,
+            bcx: l + w / 2, bcy: t + h,
+            tcx: l + w / 2, tcy: t,
+          };
+        }
+
+        function sv(x, y) {
+          if (!wstage) return { x, y };
+          return { x: x / wstage.clientWidth * 1440, y: y / wstage.clientHeight * 900 };
+        }
+
+        function cubic(x1, y1, x2, y2) {
+          const dy = y2 - y1, dx = x2 - x1;
+          return `M${x1},${y1} C${x1 + dx * .05},${y1 + dy * .58} ${x2 - dx * .05},${y2 - dy * .58} ${x2},${y2}`;
+        }
+
+        function setPath(el, d) {
+          if (!el) return 0;
+          el.setAttribute('d', d);
+          const L = el.getTotalLength ? el.getTotalLength() : 600;
+          el.setAttribute('stroke-dasharray', L);
+          return L;
+        }
+
+        function draw(el, frac, L) {
+          if (!el) return;
+          el.setAttribute('stroke-dashoffset', L * (1 - cl(frac, 0, 1)));
+        }
+
+        let cA_gatheredTop = 0, cA_gatheredLeft = 0;
+
+        function placeAll() {
+          WCARDS.forEach(c => {
+            const cardEl = document.getElementById(c.id);
+            if (!cardEl) return;
+            gsap.set(cardEl, {
+              left: vw(c.sc.l), top: vh(c.sc.t),
+              rotation: c.sr, opacity: 1, x: 0, y: 0,
+              width: '', height: '',
+            });
+          });
+
+          const sbW = Math.min(500, window.innerWidth * 0.84);
+          gsap.set(wsbox, {
+            left: (window.innerWidth - sbW) / 2,
+            top: vh(42),
+            width: sbW, opacity: 0, scale: 0.92,
+          });
+
+          if (expanded) { expanded.style.display = 'none'; expanded.style.opacity = '0'; }
+          if (compact) { compact.style.display = 'block'; compact.style.opacity = '1'; }
+
+          Object.values(WP).forEach(([g, gg]) => {
+            if (!g || !gg) return;
+            g.style.opacity = '0';
+            gg.style.opacity = '0';
+            const Lg = parseFloat(g.getAttribute('stroke-dasharray')) || 999;
+            const Lgg = parseFloat(gg.getAttribute('stroke-dasharray')) || 999;
+            g.setAttribute('stroke-dashoffset', Lg);
+            gg.setAttribute('stroke-dashoffset', Lgg);
+          });
+          gsap.set(wtoast, { opacity: 0 });
+        }
+
+        const floats = [];
+        function startFloat() {
+          WCARDS.forEach((c, i) => {
+            const cardEl = document.getElementById(c.id);
+            if (!cardEl) return;
+            const t = gsap.to(cardEl, {
+              y: '-=9', duration: 2.0 + i * .38,
+              repeat: -1, yoyo: true, ease: 'sine.inOut', delay: i * .3,
+            });
+            floats.push(t);
+          });
+        }
+
+        const locked = { A: false, B: false, C: false, D: false, E: false };
+
+        function updateWires(slideP) {
+          const sbR = rel(wsbox);
+          const sbTopSV = sv(sbR.tcx, sbR.tcy);
+
+          const BEkeys = ['B', 'C', 'D', 'E'] as const;
+          BEkeys.forEach(k => {
+            const idx = { B: 1, C: 2, D: 3, E: 4 }[k];
+            const er = rel(document.getElementById(WCARDS[idx].id));
+            const s = sv(er.bcx, er.bcy);
+            const d = cubic(s.x, s.y, sbTopSV.x, sbTopSV.y);
+            const L = setPath(WP[k][0], d);
+            setPath(WP[k][1], d);
+            if (!locked[k]) {
+              draw(WP[k][0], 0, L);
+            } else if (WP[k][0] && WP[k][1]) {
+              WP[k][0].setAttribute('stroke-dashoffset', '0');
+              WP[k][1].setAttribute('stroke-dashoffset', '0');
+              WP[k][0].style.opacity = '1';
+              WP[k][1].style.opacity = '1';
+            }
+          });
+
+          const erA = rel(wcA);
+          const sA = sv(erA.bcx, erA.bcy);
+          const dA = cubic(sA.x, sA.y, sbTopSV.x, sbTopSV.y);
+          const LA = setPath(WP.A[0], dA);
+          setPath(WP.A[1], dA);
+
+          if (locked.A && WP.A[0] && WP.A[1]) {
+            WP.A[0].setAttribute('stroke-dashoffset', '0');
+            WP.A[1].setAttribute('stroke-dashoffset', '0');
+            WP.A[0].style.opacity = '1';
+            WP.A[1].style.opacity = '1';
+          }
+        }
+
+        function drive(p) {
+          const headP = eo(pr(p, 0, 0.15));
+          if (whead) gsap.set(whead, { opacity: 1 - headP, y: -40 * headP });
+
+          WCARDS.forEach((c, i) => {
+            const el = document.getElementById(c.id);
+            if (!el) return;
+            const ms = 0.08 + i * 0.022;
+            const me = 0.32 + i * 0.008;
+            const mp = ei(pr(p, ms, me));
+            const curL = lp(vw(c.sc.l), vw(c.gc.l), mp);
+            const curT = lp(vh(c.sc.t), vh(c.gc.t), mp);
+            const curR = lp(c.sr, c.gr, mp);
+            if (i === 0 && pr(p, 0.78, 0.98) > 0) return;
+            gsap.set(el, { left: curL, top: curT, rotation: curR });
+            if (i === 0 && mp > 0.98) {
+              const r = rel(el);
+              cA_gatheredTop = r.t;
+              cA_gatheredLeft = r.l;
+            }
+          });
+
+          const slideP = eo(pr(p, 0.78, 0.98));
+          updateWires(slideP);
+
+          const wireOrder = ['B', 'C', 'D', 'E', 'A'] as const;
+          wireOrder.forEach((k, i) => {
+            const ws = 0.30 + i * 0.032;
+            const we = ws + 0.14;
+            const wp = pr(p, ws, we);
+            if (!locked[k] && WP[k][0] && WP[k][1]) {
+              const L = parseFloat(WP[k][0].getAttribute('stroke-dasharray')) || 600;
+              draw(WP[k][0], wp, L);
+              WP[k][0].style.opacity = wp > 0 ? '1' : '0';
+              const gp = eo(pr(p, we - 0.01, we + 0.05));
+              WP[k][1].style.opacity = String(gp);
+              if (gp > 0) WP[k][1].setAttribute('stroke-dashoffset', '0');
+              if (wp >= 1 && gp >= 1) locked[k] = true;
+            }
+            const idx = { A: 0, B: 1, C: 2, D: 3, E: 4 }[k];
+            const cardEl = document.getElementById(WCARDS[idx].id);
+            if (cardEl) {
+              if (pr(p, ws, we) > 0.85) cardEl.classList.add('wired');
+              else cardEl.classList.remove('wired');
+            }
+          });
+
+          const sbP = eo(pr(p, 0.50, 0.62));
+          gsap.set(wsbox, { opacity: sbP, scale: 0.92 + sbP * 0.08 });
+          const dotT = wsbox.querySelector('.wdot-t') as HTMLElement;
+          if (dotT) dotT.style.opacity = sbP > 0.65 ? '1' : '0';
+
+          const typP = pr(p, 0.62, 0.78);
+          const typedEl = document.getElementById('wtyped');
+          if (typedEl) {
+            if (typP > 0 && typP < 1) {
+              typedEl.textContent = QUERY.slice(0, Math.floor(typP * QUERY.length));
+              wcur.classList.add('on');
+            } else if (typP <= 0) {
+              typedEl.textContent = '';
+              wcur.classList.remove('on');
+            } else {
+              typedEl.textContent = QUERY;
+              wcur.classList.remove('on');
+            }
+          }
+          const dotB = wsbox.querySelector('.wdot-b') as HTMLElement;
+          if (dotB) dotB.style.opacity = typP >= 1 ? '1' : '0';
+
+          if (slideP > 0) {
+            const sbR = rel(wsbox);
+            const endTop = sbR.bcy + 28;
+            const endLeft = (wstage.clientWidth - Math.min(460, wstage.clientWidth * 0.84)) / 2;
+            const endW = Math.min(460, wstage.clientWidth * 0.84);
+            const cANow = rel(wcA);
+            const curTop = lp(cA_gatheredTop || cANow.t, endTop, slideP);
+            const curLeft = lp(cA_gatheredLeft || cANow.l, endLeft, slideP);
+            const curW = lp(202, endW, slideP);
+            gsap.set(wcA, { top: curTop, left: curLeft, width: curW, rotation: lp(-2, 0, slideP) });
+            const crossP = eo(pr(slideP, 0.25, 0.75));
+            if (compact) compact.style.opacity = String(1 - crossP);
+            if (expanded) { expanded.style.display = 'block'; expanded.style.opacity = String(crossP); }
+            floats.forEach(t => t.pause());
+            gsap.set(wcA, { y: 0 });
+          } else {
+            if (compact) compact.style.opacity = '1';
+            if (expanded) expanded.style.display = 'none';
+          }
+
+          const toastP = eo(pr(p, 0.88, 0.95));
+          if (toastP > 0) {
+            const sbR = rel(wsbox);
+            const cardAR = rel(wcA);
+            const midY = (sbR.bcy + cardAR.t) / 2 - 16;
+            gsap.set(wtoast, { opacity: toastP, top: midY, bottom: 'auto', left: '50%', x: '-50%', y: 8 * (1 - toastP) });
+          } else {
+            gsap.set(wtoast, { opacity: 0 });
+          }
+        }
+
+        const initWireAnim = () => {
+          placeAll();
+          startFloat();
+          ScrollTrigger.create({
+            trigger: '#how-it-works',
+            start: 'top top',
+            end: 'bottom bottom',
+            pin: '#wire-stage',
+            pinSpacing: false,
+            scrub: 7.5,
+            onUpdate(self) { drive(self.progress); },
+          });
+        };
+
+        initWireAnim();
+        const handleWireResize = () => { placeAll(); ScrollTrigger.refresh(); };
+        window.addEventListener('resize', handleWireResize);
+        return () => window.removeEventListener('resize', handleWireResize);
+      };
+
+      const cleanup = wireAnimWrapper();
+      return () => cleanup && cleanup();
+    });
+
+    mm.add("(max-width: 1024px)", () => {
       const wstage = document.getElementById('wire-stage');
       const wsbox = document.getElementById('wsbox');
       const wcA = document.getElementById('wcA');
       const compact = document.getElementById('wcA-compact');
       const expanded = document.getElementById('wcA-expanded');
-      const wtoast = document.getElementById('wtoast');
-      const wcur = document.getElementById('wcur');
+      const wtyped = document.getElementById('wtyped');
+      const QUERY = 'Find my insurance renewal document';
 
       const WP = {
         A: [document.getElementById('wpA'), document.getElementById('wpAg')],
@@ -239,308 +554,98 @@ export default function CluedoxLandingPage() {
         C: [document.getElementById('wpC'), document.getElementById('wpCg')],
         D: [document.getElementById('wpD'), document.getElementById('wpDg')],
         E: [document.getElementById('wpE'), document.getElementById('wpEg')],
-        V: [document.getElementById('wpV'), document.getElementById('wpVg')],
       };
 
       if (!wstage || !wsbox || !wcA) return;
 
-      /* ── MATHS ── */
-      const vw = p => p / 100 * window.innerWidth;
-      const vh = p => p / 100 * window.innerHeight;
-      const cl = (v, a, b) => Math.min(b, Math.max(a, v));
-      const pr = (p, a, b) => cl((p - a) / (b - a), 0, 1);
-      const eo = t => 1 - Math.pow(1 - t, 3);
-      const ei = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      const lp = (a, b, t) => a + (b - a) * t;
+      const initMobile = () => {
+        const isSmall = window.innerWidth < 480;
+        const centerX = wstage.clientWidth / 2;
 
-      function rel(el: HTMLElement | null) {
-        if (!el) return { t: 0, l: 0, cx: 0, cy: 0, bcx: 0, tcx: 0, h: 0, w: 0 };
-        // Use offset values for stability relative to pinned container
-        const t = el.offsetTop;
-        const l = el.offsetLeft;
-        const w = el.offsetWidth;
-        const h = el.offsetHeight;
-        return {
-          t, l, w, h,
-          cx: l + w / 2,
-          cy: t + h / 2,
-          bcx: l + w / 2, bcy: t + h,
-          tcx: l + w / 2, tcy: t,
-        };
-      }
+        // Final state settings
+        gsap.set('.wcard', { opacity: 1, rotation: 0, x: 0, y: 0, scale: 1 });
+        gsap.set('#wsbox', { opacity: 1, scale: 1 });
+        if (compact) compact.style.display = 'none';
+        if (expanded) { expanded.style.display = 'block'; expanded.style.opacity = '1'; }
+        if (wtyped) wtyped.textContent = QUERY;
 
-      function sv(x, y) {
-        if (!wstage) return { x, y };
-        return { x: x / wstage.clientWidth * 1440, y: y / wstage.clientHeight * 900 };
-      }
+        // Positioning
+        const startTop = 200;
+        const cardW = isSmall ? 180 : 200;
+        const cardH = 110;
+        const gap = 16;
 
-      function cubic(x1, y1, x2, y2) {
-        const dy = y2 - y1, dx = x2 - x1;
-        return `M${x1},${y1} C${x1 + dx * .05},${y1 + dy * .58} ${x2 - dx * .05},${y2 - dy * .58} ${x2},${y2}`;
-      }
+        if (isSmall) {
+          // 1-column stack for phones
+          gsap.set('#wcB', { left: centerX - cardW / 2 - 125, top: startTop });
+          gsap.set('#wcC', { left: centerX - cardW / 2 - 100, top: startTop + cardH + gap + 20 });
+          gsap.set('#wcD', { left: centerX - cardW / 2 + 90, top: startTop + (cardH + gap) * 2 - 200 });
+          gsap.set('#wcE', { left: centerX - cardW / 2 + 100, top: startTop + (cardH + gap) * 3 - 170 });
+        } else {
+          // 2-column grid for tablets
+          const gridW = (cardW * 2) + gap;
+          gsap.set('#wcB', { left: centerX - gridW / 2, top: startTop });
+          gsap.set('#wcC', { left: centerX + gap / 2, top: startTop });
+          gsap.set('#wcD', { left: centerX - gridW / 2, top: startTop + cardH + gap - 200 });
+          gsap.set('#wcE', { left: centerX + gap / 2, top: startTop + cardH + gap });
+        }
 
-      function setPath(el, d) {
-        if (!el) return 0;
-        el.setAttribute('d', d);
-        const L = el.getTotalLength ? el.getTotalLength() : 600;
-        el.setAttribute('stroke-dasharray', L);
-        return L;
-      }
+        const boxTop = isSmall ? startTop + (cardH + gap) * 4 + 60 : startTop + (cardH + gap) * 2 + 60;
+        const sbW = Math.min(500, wstage.clientWidth * 0.9);
+        gsap.set('#wsbox', { left: (wstage.clientWidth - sbW) / 2, top: boxTop - 100, width: sbW });
 
-      function draw(el, frac, L) {
-        if (!el) return;
-        el.setAttribute('stroke-dashoffset', L * (1 - cl(frac, 0, 1)));
-      }
+        const resultTop = boxTop + 340;
+        const expW = Math.min(460, wstage.clientWidth * 0.9);
+        gsap.set('#wcA', { left: (wstage.clientWidth - expW + 100) / 2, top: resultTop, width: expW });
 
-      let cA_gatheredTop = 0, cA_gatheredLeft = 0;
+        // Draw Wires
+        setTimeout(() => {
+          const rel = (el) => {
+            const t = el.offsetTop, l = el.offsetLeft, w = el.offsetWidth, h = el.offsetHeight;
+            return { bcx: l + w / 2, bcy: t + h, tcx: l + w / 2, tcy: t };
+          };
+          const sv = (x, y) => ({ x: x / wstage.clientWidth * 1440, y: y / wstage.clientHeight * 900 });
+          const cubic = (x1, y1, x2, y2) => {
+            const dy = y2 - y1, dx = x2 - x1;
+            return `M${x1},${y1} C${x1 + dx * .05},${y1 + dy * .58} ${x2 - dx * .05},${y2 - dy * .58} ${x2},${y2}`;
+          };
 
-      function placeAll() {
-        WCARDS.forEach(c => {
-          const cardEl = document.getElementById(c.id);
-          if (!cardEl) return;
-          gsap.set(cardEl, {
-            left: vw(c.sc.l), top: vh(c.sc.t),
-            rotation: c.sr, opacity: 1, x: 0, y: 0,
-            width: '', height: '',
-          });
-        });
+          const sbR = rel(wsbox);
+          const sbTopSV = sv(sbR.tcx, sbR.tcy);
 
-        const sbW = Math.min(500, window.innerWidth * 0.84);
-        gsap.set(wsbox, {
-          left: (window.innerWidth - sbW) / 2,
-          top: vh(72),
-          width: sbW, opacity: 0, scale: 0.92,
-        });
-
-        if (expanded) expanded.style.display = 'none';
-        if (expanded) expanded.style.opacity = '0';
-        if (compact) compact.style.display = 'block';
-        if (compact) compact.style.opacity = '1';
-
-        Object.values(WP).forEach(([g, gg]) => {
-          if (!g || !gg) return;
-          g.style.opacity = '0';
-          gg.style.opacity = '0';
-          const Lg = parseFloat(g.getAttribute('stroke-dasharray')) || 999;
-          const Lgg = parseFloat(gg.getAttribute('stroke-dasharray')) || 999;
-          g.setAttribute('stroke-dashoffset', Lg);
-          gg.setAttribute('stroke-dashoffset', Lgg);
-        });
-
-        gsap.set(wtoast, { opacity: 0 });
-      }
-
-      /* ── FLOAT ANIMATION ── */
-      const floats = [];
-      function startFloat() {
-        WCARDS.forEach((c, i) => {
-          const cardEl = document.getElementById(c.id);
-          if (!cardEl) return;
-          const t = gsap.to(cardEl, {
-            y: '-=9', duration: 2.0 + i * .38,
-            repeat: -1, yoyo: true, ease: 'sine.inOut', delay: i * .3,
-          });
-          floats.push(t);
-        });
-      }
-
-      const locked = { A: false, B: false, C: false, D: false, E: false };
-
-      function updateWires(slideP) {
-        const sbR = rel(wsbox);
-        const sbTopSV = sv(sbR.tcx, sbR.tcy);
-
-        const BEkeys = ['B', 'C', 'D', 'E'] as const;
-        BEkeys.forEach(k => {
-          const idx = { B: 1, C: 2, D: 3, E: 4 }[k];
-          const er = rel(document.getElementById(WCARDS[idx].id));
-          const s = sv(er.bcx, er.bcy);
-          const d = cubic(s.x, s.y, sbTopSV.x, sbTopSV.y);
-          const L = setPath(WP[k][0], d);
-          setPath(WP[k][1], d);
-          if (!locked[k]) {
-            draw(WP[k][0], 0, L);
-          } else if (WP[k][0] && WP[k][1]) {
-            WP[k][0].setAttribute('stroke-dashoffset', '0');
-            WP[k][1].setAttribute('stroke-dashoffset', '0');
+          ['B', 'C', 'D', 'E'].forEach(k => {
+            const card = document.getElementById('wc' + k);
+            if (!card) return;
+            const r = rel(card);
+            const s = sv(r.bcx, r.bcy);
+            const d = cubic(s.x, s.y, sbTopSV.x, sbTopSV.y);
+            WP[k][0].setAttribute('d', d);
+            WP[k][1].setAttribute('d', d);
             WP[k][0].style.opacity = '1';
             WP[k][1].style.opacity = '1';
-          }
-        });
-
-        const erA = rel(wcA);
-        const sA = sv(erA.bcx, erA.bcy);
-        const dA = cubic(sA.x, sA.y, sbTopSV.x, sbTopSV.y);
-        const LA = setPath(WP.A[0], dA);
-        setPath(WP.A[1], dA);
-
-        if (locked.A && WP.A[0] && WP.A[1]) {
-          WP.A[0].setAttribute('stroke-dashoffset', '0');
-          WP.A[1].setAttribute('stroke-dashoffset', '0');
-          WP.A[0].style.opacity = '1';
-          WP.A[1].style.opacity = '1';
-        }
-
-        if (slideP > 0 && WP.V[0] && WP.V[1]) {
-          WP.V[0].style.opacity = '0';
-          WP.V[1].style.opacity = '0';
-        }
-      }
-
-      function drive(p) {
-
-        /* 1. Cards migrate */
-        WCARDS.forEach((c, i) => {
-          const el = document.getElementById(c.id);
-          if (!el) return;
-          const ms = 0.08 + i * 0.022;
-          const me = 0.32 + i * 0.008;
-          const mp = ei(pr(p, ms, me));
-
-          const curL = lp(vw(c.sc.l), vw(c.gc.l), mp);
-          const curT = lp(vh(c.sc.t), vh(c.gc.t), mp);
-          const curR = lp(c.sr, c.gr, mp);
-
-          if (i === 0 && pr(p, 0.78, 0.98) > 0) return;
-
-          gsap.set(el, { left: curL, top: curT, rotation: curR });
-
-          if (i === 0 && mp > 0.98) {
-            const r = rel(el);
-            cA_gatheredTop = r.t;
-            cA_gatheredLeft = r.l;
-          }
-        });
-
-        /* 2. Rebuild all wires from current positions */
-        const slideP = eo(pr(p, 0.78, 0.98));
-        updateWires(slideP);
-
-        /* 3. Wire draw progress */
-        const wireOrder = ['B', 'C', 'D', 'E', 'A'] as const;
-        wireOrder.forEach((k, i) => {
-          const ws = 0.30 + i * 0.032;
-          const we = ws + 0.14;
-          const wp = pr(p, ws, we);
-
-          if (!locked[k] && WP[k][0] && WP[k][1]) {
-            const L = parseFloat(WP[k][0].getAttribute('stroke-dasharray')) || 600;
-            draw(WP[k][0], wp, L);
-            WP[k][0].style.opacity = wp > 0 ? '1' : '0';
-
-            const gp = eo(pr(p, we - 0.01, we + 0.05));
-            WP[k][1].style.opacity = String(gp);
-            if (gp > 0) WP[k][1].setAttribute('stroke-dashoffset', '0');
-
-            if (wp >= 1 && gp >= 1) locked[k] = true;
-          }
-
-          const idx = { A: 0, B: 1, C: 2, D: 3, E: 4 }[k];
-          const cardEl = document.getElementById(WCARDS[idx].id);
-          if (cardEl) {
-            if (pr(p, ws, we) > 0.85) cardEl.classList.add('wired');
-            else cardEl.classList.remove('wired');
-          }
-        });
-
-        /* 4. Sbox */
-        const sbP = eo(pr(p, 0.50, 0.62));
-        gsap.set(wsbox, { opacity: sbP, scale: 0.92 + sbP * 0.08 });
-        const dotT = wsbox.querySelector('.wdot-t') as HTMLElement;
-        if (dotT) dotT.style.opacity = sbP > 0.65 ? '1' : '0';
-
-        /* 5. Typing */
-        const typP = pr(p, 0.62, 0.78);
-        const typedEl = document.getElementById('wtyped');
-        if (typedEl) {
-          if (typP > 0 && typP < 1) {
-            typedEl.textContent = QUERY.slice(0, Math.floor(typP * QUERY.length));
-            wcur.classList.add('on');
-          } else if (typP <= 0) {
-            typedEl.textContent = '';
-            wcur.classList.remove('on');
-          } else {
-            typedEl.textContent = QUERY;
-            wcur.classList.remove('on');
-          }
-        }
-        const dotB = wsbox.querySelector('.wdot-b') as HTMLElement;
-        if (dotB) dotB.style.opacity = typP >= 1 ? '1' : '0';
-
-        /* 6. Card A slides DOWN and EXPANDS IN PLACE */
-        if (slideP > 0) {
-          const sbR = rel(wsbox);
-          const endTop = sbR.bcy + 28;
-          const endLeft = (wstage.clientWidth - Math.min(460, wstage.clientWidth * 0.84)) / 2;
-          const endW = Math.min(460, wstage.clientWidth * 0.84);
-
-          const cANow = rel(wcA);
-          const curTop = lp(cA_gatheredTop || cANow.t, endTop, slideP);
-          const curLeft = lp(cA_gatheredLeft || cANow.l, endLeft, slideP);
-          const curW = lp(202, endW, slideP);
-
-          gsap.set(wcA, {
-            top: curTop,
-            left: curLeft,
-            width: curW,
-            rotation: lp(-2, 0, slideP),
+            WP[k][0].setAttribute('stroke-dashoffset', '0');
+            WP[k][1].setAttribute('stroke-dashoffset', '0');
+            card.classList.add('wired');
           });
 
-          const crossP = eo(pr(slideP, 0.25, 0.75));
-          if (compact) compact.style.opacity = String(1 - crossP);
-          if (expanded) expanded.style.display = 'block';
-          if (expanded) expanded.style.opacity = String(crossP);
-
-          floats.forEach(t => t.pause());
-          gsap.set(wcA, { y: 0 });
-
-        } else {
-          if (compact) compact.style.opacity = '1';
-          if (expanded) expanded.style.display = 'none';
-        }
-
-        /* 7. Toast */
-        const toastP = eo(pr(p, 0.88, 0.95));
-        if (toastP > 0) {
-          const sbR = rel(wsbox);
-          const cardAR = rel(wcA);
-          const sbB = sbR.bcy;
-          const cAT = cardAR.t;
-          const midY = (sbB + cAT) / 2 - 16;
-          gsap.set(wtoast, {
-            opacity: toastP, top: midY, bottom: 'auto',
-            left: '50%', x: '-50%', y: 8 * (1 - toastP),
-          });
-        } else {
-          gsap.set(wtoast, { opacity: 0 });
-        }
-      }
-
-      const initWireAnim = () => {
-        placeAll();
-        startFloat();
-
-        ScrollTrigger.create({
-          trigger: '#how-it-works',
-          start: 'top top',
-          end: 'bottom bottom',
-          pin: '#wire-stage',
-          pinSpacing: false,
-          scrub: 3.5,
-          onUpdate(self) { drive(self.progress); },
-        });
+          // Result wire
+          const rA = rel(wcA);
+          const sA = sv(rA.tcx, rA.tcy);
+          const sbBotSV = sv(sbR.bcx, sbR.bcy);
+          const dA = cubic(sbBotSV.x, sbBotSV.y, sA.x, sA.y);
+          const wpV = [document.getElementById('wpV'), document.getElementById('wpVg')];
+          if (wpV[0] && wpV[1]) {
+            wpV[0].setAttribute('d', dA); wpV[1].setAttribute('d', dA);
+            wpV[0].style.opacity = '1'; wpV[1].style.opacity = '1';
+            wpV[0].setAttribute('stroke-dashoffset', '0'); wpV[1].setAttribute('stroke-dashoffset', '0');
+          }
+        }, 100);
       };
 
-      initWireAnim();
-
-      const handleWireResize = () => {
-        placeAll();
-        ScrollTrigger.refresh();
-      };
-      window.addEventListener('resize', handleWireResize);
-      return () => window.removeEventListener('resize', handleWireResize);
-    };
-    const wireCleanup = wireAnimWrapper();
+      initMobile();
+      window.addEventListener('resize', initMobile);
+      return () => window.removeEventListener('resize', initMobile);
+    });
 
     /* ── CAPTURE ── */
     gsap.to('#capture-left', {
@@ -701,7 +806,6 @@ export default function CluedoxLandingPage() {
       window.removeEventListener('scroll', handleNavbarScroll);
       window.removeEventListener('load', handleScrollRefresh);
       particleCleanup && (particleCleanup as any)();
-      wireCleanup && wireCleanup();
     };
   }, { dependencies: [], scope: containerRef }); // consolidated into first hook
 
@@ -757,7 +861,7 @@ export default function CluedoxLandingPage() {
           Search any file by {currentText}<span className="cursor-blink" style={{ fontWeight: 300, display: 'inline-block' }}></span>
         </h1>
         <p className="hero-sub" style={{ position: 'relative', zIndex: '10', }}>Cluedox <strong>securely organises every document you own</strong> — automatically. Search by meaning, find what you need instantly, never lose a file again.</p>
-        <div className="hero-actions" style={{ position: 'relative', zIndex: '10', }}>
+        <div className="hero-actions" style={{ zIndex: '10', }}>
           <button onClick={() => navigate('/login')} className="btn-primary hero-main-cta">Get Started Free →</button>
           <a href="#features" className="btn-ghost" style={{ borderWidth: '2px' }}>Explore Features ↓</a>
         </div>
@@ -962,13 +1066,13 @@ export default function CluedoxLandingPage() {
             <path id="wpC" fill="none" stroke="rgba(155,151,143,0.55)" strokeWidth="1.5" strokeLinecap="round" />
             <path id="wpD" fill="none" stroke="rgba(155,151,143,0.55)" strokeWidth="1.5" strokeLinecap="round" />
             <path id="wpE" fill="none" stroke="rgba(155,151,143,0.55)" strokeWidth="1.5" strokeLinecap="round" />
-            <path id="wpAg" fill="none" stroke="#3d8a5c" strokeWidth="1.8" strokeLinecap="round" filter="url(#wglow)" />
-            <path id="wpBg" fill="none" stroke="#3d8a5c" strokeWidth="1.8" strokeLinecap="round" filter="url(#wglow)" />
-            <path id="wpCg" fill="none" stroke="#3d8a5c" strokeWidth="1.8" strokeLinecap="round" filter="url(#wglow)" />
-            <path id="wpDg" fill="none" stroke="#3d8a5c" strokeWidth="1.8" strokeLinecap="round" filter="url(#wglow)" />
-            <path id="wpEg" fill="none" stroke="#3d8a5c" strokeWidth="1.8" strokeLinecap="round" filter="url(#wglow)" />
+            <path id="wpAg" fill="none" stroke="#000000ff" strokeWidth="1.8" strokeLinecap="round" filter="url(#wglow)" />
+            <path id="wpBg" fill="none" stroke="#000000ff" strokeWidth="1.8" strokeLinecap="round" filter="url(#wglow)" />
+            <path id="wpCg" fill="none" stroke="#000000ff" strokeWidth="1.8" strokeLinecap="round" filter="url(#wglow)" />
+            <path id="wpDg" fill="none" stroke="#000000ff" strokeWidth="1.8" strokeLinecap="round" filter="url(#wglow)" />
+            <path id="wpEg" fill="none" stroke="#000000ff" strokeWidth="1.8" strokeLinecap="round" filter="url(#wglow)" />
             <path id="wpV" fill="none" stroke="rgba(155,151,143,0.55)" strokeWidth="1.5" strokeLinecap="round" />
-            <path id="wpVg" fill="none" stroke="#3d8a5c" strokeWidth="2" strokeLinecap="round" filter="url(#wglow2)" />
+            <path id="wpVg" fill="none" stroke="#000000ff" strokeWidth="2" strokeLinecap="round" filter="url(#wglow2)" />
           </svg>
 
           <div id="wire-heading">
@@ -980,7 +1084,7 @@ export default function CluedoxLandingPage() {
           <div className="wcard" id="wcA" style={{ width: '202px', }}>
             <div className="wcdot"></div>
             <div id="wcA-compact">
-              <div className="wfname"><div className="wficon" style={{ background: '#fee2e2', }}>📋</div>insurance_policy.pdf</div>
+              <div className="wfname"><div className="wficon" style={{ background: '#fee2e2', color: "black", }}>📋</div>insurance_policy.pdf</div>
               <div className="wlines"><div className="wln f"></div><div className="wln m"></div><div className="wln s"></div></div>
               <div className="wtags"><span className="wtag wtb">Insurance</span><span className="wtag wtg">Health</span><span className="wtag wto">⏰ 30d</span></div>
             </div>
@@ -1022,7 +1126,7 @@ export default function CluedoxLandingPage() {
             <div className="wsb-chips">
               <span className="wchip"><span className="wchipdot" style={{ background: '#e05c5c', }}></span>insurance_policy.pdf</span>
               <span className="wchip"><span className="wchipdot" style={{ background: '#4a90d9', }}></span>vendor_agreement.pdf</span>
-              <span className="wchip"><span className="wchipdot" style={{ background: '#2d9954', }}></span>gst_march_2025.xlsx</span>
+              <span className="wchip"><span className="wchipdot" style={{ background: '#000000ff', }}></span>gst_march_2025.xlsx</span>
               <span className="wchip" style={{ opacity: '.45', }}>+2 more</span>
             </div>
             <div className="wsb-input"><span id="wtyped"></span><span id="wcur"></span></div>
@@ -1046,6 +1150,7 @@ export default function CluedoxLandingPage() {
                   <span className="ws-word">PDFs.</span>
                   <span className="ws-word">Receipts.</span>
                   <span className="ws-word">Images.</span>
+                  <span className="ws-word">Anything.</span>
                 </span>
               </span>
               <br />
@@ -1100,10 +1205,10 @@ export default function CluedoxLandingPage() {
               <div className="feat-card-body">AES-256 encryption at rest, TLS 1.3 in transit. Zero-knowledge architecture — our team cannot access your files. Your data never trains any AI model.</div>
               <div className="feat-card-screen">
                 <div className="ms-group-label">Security Status</div>
-                <div className="ms-item active"><div className="ms-item-dot" style={{ background: '#5fce8a', }}></div><span className="ms-item-name">AES-256 Encryption Active</span></div>
-                <div className="ms-item"><div className="ms-item-dot" style={{ background: '#5fce8a', }}></div><span className="ms-item-name">TLS 1.3 In Transit</span></div>
-                <div className="ms-item"><div className="ms-item-dot" style={{ background: '#5fce8a', }}></div><span className="ms-item-name">Zero-Knowledge Architecture</span></div>
-                <div className="ms-item"><div className="ms-item-dot" style={{ background: '#5fce8a', }}></div><span className="ms-item-name">DPDP 2023 Compliant</span></div>
+                <div className="ms-item active"><div className="ms-item-dot" style={{ background: '#101411ff', }}></div><span className="ms-item-name">AES-256 Encryption Active</span></div>
+                <div className="ms-item"><div className="ms-item-dot" style={{ background: '#101411ff', }}></div><span className="ms-item-name">TLS 1.3 In Transit</span></div>
+                <div className="ms-item"><div className="ms-item-dot" style={{ background: '#101411ff', }}></div><span className="ms-item-name">Zero-Knowledge Architecture</span></div>
+                <div className="ms-item"><div className="ms-item-dot" style={{ background: '#101411ff', }}></div><span className="ms-item-name">DPDP 2023 Compliant</span></div>
               </div>
             </div>
           </div>
@@ -1130,18 +1235,21 @@ export default function CluedoxLandingPage() {
       <section id="who">
         <div className="section-eyebrow" style={{ justifyContent: 'center', }}>✦ WHO'S CLUEDOX FOR</div>
         <h2 className="who-heading" id="who-heading">
-          For
-          <span className="word-slider" style={{ paddingLeft: '16px', paddingRight: '16px' }}>
-            <span className="word-slider-inner">
-              <span className="ws-word">Students</span>
-              <span className="ws-word">Teachers</span>
-              <span className="ws-word">Professionals</span>
-              <span className="ws-word">Freelancers</span>
-              <span className="ws-word">Founders</span>
-              <span className="ws-word">People</span>
-            </span>
-          </span>
-          <br />who work with documents and can't afford to lose them.
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}> For
+              <span className="word-slider">
+                <span className="word-slider-inner">
+                  <span className="ws-word">Students</span>
+                  <span className="ws-word">Teachers</span>
+                  <span className="ws-word">Professionals</span>
+                  <span className="ws-word">Freelancers</span>
+                  <span className="ws-word">Founders</span>
+                  <span className="ws-word">People</span>
+                  <span className="ws-word">Students</span>
+                </span>
+              </span>who</div>
+          </div>
+          <div style={{ marginTop: '0.1em' }}> work with documents and can't afford to lose them.</div>
         </h2>
 
         <div id="carousel-wrapper">
@@ -1449,50 +1557,54 @@ export default function CluedoxLandingPage() {
         </div>
       </footer>
 
-      {isWaitlistOpen && (
-        <div className="waitlist-modal-overlay">
-          <div className="waitlist-modal">
-            <button className="waitlist-close" onClick={() => setIsWaitlistOpen(false)}>×</button>
-            {waitlistStatus === 'success' ? (
-              <div className="waitlist-success">
-                <div className="waitlist-success-icon">✨</div>
-                <h3>You're on the list!</h3>
-                <p>We'll notify you as soon as Cluedox launches.</p>
-                <button className="btn-primary" style={{ width: '100%' }} onClick={() => setIsWaitlistOpen(false)}>Close</button>
-              </div>
-            ) : (
-              <form className="waitlist-form" onSubmit={handleJoinWaitlist}>
-                <div className="waitlist-header">
-                  <span className="waitlist-eyebrow">Coming Soon</span>
-                  <h2>Join the Waitlist</h2>
-                  <p>Be the first to know when we launch and get early access.</p>
+      {
+        isWaitlistOpen && (
+          <div className="waitlist-modal-overlay">
+            <div className="waitlist-modal">
+              <button className="waitlist-close" onClick={() => setIsWaitlistOpen(false)}>×</button>
+              {waitlistStatus === 'success' ? (
+                <div className="waitlist-success">
+                  <div className="waitlist-success-icon">✨</div>
+                  <h3>You're on the list!</h3>
+                  <p>We'll notify you as soon as Cluedox launches.</p>
+                  <button className="btn-primary" style={{ width: '100%' }} onClick={() => setIsWaitlistOpen(false)}>Close</button>
                 </div>
-                {waitlistError && <div style={{ color: '#ff5f57', fontSize: '13px', marginBottom: '16px', textAlign: 'center', fontWeight: '500' }}>{waitlistError}</div>}
-                <div className="waitlist-input-group">
-                  <label>Full Name</label>
-                  <input type="text" required placeholder="Your Name" value={name} onChange={e => setName(e.target.value)} />
-                </div>
-                <div className="waitlist-input-group">
-                  <label>Email Address</label>
-                  <input type="email" required placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
-                </div>
-                <button type="submit" className="btn-primary waitlist-submit" disabled={waitlistStatus === 'submitting'}>
-                  {waitlistStatus === 'submitting' ? 'Joining...' : 'Join Waitlist'}
-                </button>
-              </form>
-            )}
+              ) : (
+                <form className="waitlist-form" onSubmit={handleJoinWaitlist}>
+                  <div className="waitlist-header">
+                    <span className="waitlist-eyebrow">Coming Soon</span>
+                    <h2>Join the Waitlist</h2>
+                    <p>Be the first to know when we launch and get early access.</p>
+                  </div>
+                  {waitlistError && <div style={{ color: '#ff5f57', fontSize: '13px', marginBottom: '16px', textAlign: 'center', fontWeight: '500' }}>{waitlistError}</div>}
+                  <div className="waitlist-input-group">
+                    <label>Full Name</label>
+                    <input type="text" required placeholder="Your Name" value={name} onChange={e => setName(e.target.value)} />
+                  </div>
+                  <div className="waitlist-input-group">
+                    <label>Email Address</label>
+                    <input type="email" required placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+                  </div>
+                  <button type="submit" className="btn-primary waitlist-submit" disabled={waitlistStatus === 'submitting'}>
+                    {waitlistStatus === 'submitting' ? 'Joining...' : 'Join Waitlist'}
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {showScrollTop && (
-        <button
-          className="scroll-top"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        >
-          ↑
-        </button>
-      )}
-    </div>
+      {
+        showScrollTop && (
+          <button
+            className="scroll-top"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            ↑
+          </button>
+        )
+      }
+    </div >
   );
 }
