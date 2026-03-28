@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { consumeAiBudget } from "../_shared/aiBudget.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,6 +66,14 @@ Be concise but thorough. Use markdown formatting for clarity. If information isn
 
 USER'S DOCUMENTS:
 ${fileContext || "No documents uploaded yet."}`;
+
+    const withinBudget = await consumeAiBudget(serviceClient, 0.25, 100);
+    if (!withinBudget) {
+      return new Response(JSON.stringify({ error: "Monthly AI budget limit reached (₹100)." }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

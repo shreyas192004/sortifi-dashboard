@@ -46,6 +46,16 @@ interface UserFileStats {
   total_size: number;
 }
 
+interface AdminBudgetSnapshot {
+  monthStart: string;
+  budgetLimitInr: number;
+  spentInr: number;
+  remainingInr: number;
+  utilizationPercent: number;
+  lastUpdated: string | null;
+  history: Array<{ month_start: string; spent_inr: number }>;
+}
+
 const planColors: Record<string, string> = {
   free: "bg-secondary text-secondary-foreground",
   starter: "bg-blue-500/10 text-blue-600",
@@ -78,10 +88,36 @@ const AdminPage = () => {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingRole, setCheckingRole] = useState(true);
+  const [budget, setBudget] = useState<AdminBudgetSnapshot | null>(null);
+  const [budgetLoading, setBudgetLoading] = useState(false);
 
   useEffect(() => {
     checkAdminAndLoad();
   }, []);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const timer = setInterval(() => {
+      loadBudget(true);
+    }, 15000);
+
+    return () => clearInterval(timer);
+  }, [isAdmin]);
+
+  const loadBudget = async (silent = false) => {
+    if (!silent) setBudgetLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-budget");
+      if (error) throw error;
+      setBudget(data as AdminBudgetSnapshot);
+    } catch (err: any) {
+      if (!silent) toast.error(err.message || "Failed to load AI budget stats");
+    } finally {
+      if (!silent) setBudgetLoading(false);
+    }
+  };
 
   const checkAdminAndLoad = async () => {
     try {
@@ -101,6 +137,8 @@ const AdminPage = () => {
 
       setIsAdmin(true);
       setCheckingRole(false);
+
+      await loadBudget();
 
       // Fetch all profiles
       const { data: profiles } = await supabase
@@ -219,6 +257,67 @@ const AdminPage = () => {
             </motion.div>
           ))}
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="rounded-xl border border-border bg-card p-4 mb-6"
+        >
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-red-500/10">
+                <Calendar className="w-4 h-4 text-red-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">AI Budget This Month</p>
+                <p className="text-xs text-muted-foreground">Real-time usage cap tracking</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => loadBudget()} disabled={budgetLoading}>
+              {budgetLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Refresh"}
+            </Button>
+          </div>
+
+          {!budget ? (
+            <p className="text-sm text-muted-foreground">No budget data available yet.</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                <div className="rounded-lg bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">Spent</p>
+                  <p className="text-lg font-semibold">₹{budget.spentInr.toFixed(2)}</p>
+                </div>
+                <div className="rounded-lg bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">Remaining</p>
+                  <p className="text-lg font-semibold text-emerald-600">₹{budget.remainingInr.toFixed(2)}</p>
+                </div>
+                <div className="rounded-lg bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">Monthly Cap</p>
+                  <p className="text-lg font-semibold">₹{budget.budgetLimitInr.toFixed(2)}</p>
+                </div>
+                <div className="rounded-lg bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">Utilization</p>
+                  <p className="text-lg font-semibold">{budget.utilizationPercent.toFixed(1)}%</p>
+                </div>
+              </div>
+
+              <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full transition-all",
+                    budget.utilizationPercent >= 90 ? "bg-red-500" : budget.utilizationPercent >= 70 ? "bg-amber-500" : "bg-emerald-500",
+                  )}
+                  style={{ width: `${Math.max(0, Math.min(100, budget.utilizationPercent))}%` }}
+                />
+              </div>
+
+              <p className="text-xs text-muted-foreground mt-2">
+                Period start: {new Date(budget.monthStart).toLocaleDateString()} · Last update: {budget.lastUpdated ? new Date(budget.lastUpdated).toLocaleString() : "N/A"}
+              </p>
+            </>
+          )}
+        </motion.div>
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">

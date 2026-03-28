@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, ArrowRight, Zap, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,23 @@ const Login = () => {
   useGoogleDriveToken();
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectTarget =
+    typeof location.state === "object" && location.state !== null && "from" in location.state
+      ? String((location.state as { from?: unknown }).from || "")
+      : "";
+
+  const isSafeRedirectTarget =
+    redirectTarget.startsWith("/") &&
+    !redirectTarget.startsWith("//") &&
+    redirectTarget !== "/login" &&
+    !redirectTarget.startsWith("/login?") &&
+    !redirectTarget.startsWith("/login#") &&
+    redirectTarget !== "/onboarding" &&
+    !redirectTarget.startsWith("/onboarding?") &&
+    !redirectTarget.startsWith("/onboarding#") &&
+    redirectTarget !== "/reset-password";
 
   const redirectByOnboarding = useCallback(async (userId: string) => {
     const { data: profile } = await supabase
@@ -33,9 +50,9 @@ const Login = () => {
     if (!profile || !profile.onboarding_completed) {
       navigate("/onboarding", { replace: true });
     } else {
-      navigate("/dashboard", { replace: true });
+      navigate(isSafeRedirectTarget ? redirectTarget : "/dashboard", { replace: true });
     }
-  }, [navigate]);
+  }, [isSafeRedirectTarget, navigate, redirectTarget]);
 
   // Handle auth state and redirect after OAuth/email login
   useEffect(() => {

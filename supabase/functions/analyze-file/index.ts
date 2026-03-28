@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { consumeAiBudget } from "../_shared/aiBudget.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,8 +10,64 @@ const corsHeaders = {
 const MAX_IMAGE_BASE64_SIZE = 8 * 1024 * 1024; // 8MB
 const MAX_PDF_BASE64_SIZE = 10 * 1024 * 1024; // 10MB
 
+function normalizeMetadata(metadata: any, fileName: string, fileContent: string) {
+  const safe = metadata && typeof metadata === "object" ? { ...metadata } : {};
+
+  const tagsRaw = Array.isArray(safe.tags) ? safe.tags : [];
+  const normalizedTags = tagsRaw
+    .map((t: any) => {
+      if (typeof t === "string") {
+        return { name: t.trim(), confidence: 0.6 };
+      }
+      if (t && typeof t === "object") {
+        return {
+          name: String(t.name || "").trim(),
+          confidence: typeof t.confidence === "number" ? t.confidence : 0.6,
+        };
+      }
+      return null;
+    })
+    .filter((t: any) => t && t.name.length >= 2)
+    .map((t: any) => ({ ...t, confidence: Math.max(0, Math.min(1, t.confidence)) }));
+
+  const dedup = new Map<string, { name: string; confidence: number }>();
+  for (const t of normalizedTags) {
+    const key = t.name.toLowerCase();
+    if (!dedup.has(key)) dedup.set(key, t);
+  }
+
+  let finalTags = Array.from(dedup.values()).slice(0, 20);
+  if (finalTags.length === 0) {
+    const fallbackWords = `${fileName} ${safe.semantic_keywords || ""}`
+      .replace(/[^a-zA-Z0-9\s]/g, " ")
+      .split(/\s+/)
+      .map((w) => w.trim())
+      .filter((w) => w.length >= 3)
+      .slice(0, 6);
+    finalTags = fallbackWords.map((w) => ({ name: w, confidence: 0.5 }));
+    if (finalTags.length === 0) {
+      finalTags = [{ name: "document", confidence: 0.5 }];
+    }
+  }
+
+  return {
+    tags: finalTags,
+    summary: String(safe.summary || fileContent || `Document analysis for ${fileName}`).slice(0, 8000),
+    ai_description: String(safe.ai_description || fileName).slice(0, 2000),
+    expiry_date: safe.expiry_date || null,
+    extracted_text: String(safe.extracted_text || fileContent || "").slice(0, 50000),
+    semantic_keywords: String(safe.semantic_keywords || finalTags.map((t) => t.name).join(", ")).slice(0, 8000),
+    entities: Array.isArray(safe.entities) ? safe.entities : [],
+    original_language: String(safe.original_language || "en"),
+    translated_text: safe.translated_text || null,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  let currentFileId: string | null = null;
+  let currentFileName: string | null = null;
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -19,7 +76,10 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableApiKey) throw new Error("LOVABLE_API_KEY not configured");
+    const googleAiKey = Deno.env.get("GOOGLE_AI_KEY") || Deno.env.get("GEMINI_API_KEY");
+    if (!lovableApiKey && !googleAiKey) {
+      throw new Error("No AI provider key configured (set LOVABLE_API_KEY or GOOGLE_AI_KEY/GEMINI_API_KEY)");
+    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -30,6 +90,8 @@ serve(async (req) => {
 
     const { fileId, fileName, fileType } = await req.json();
     if (!fileId || !fileName) throw new Error("Missing fileId or fileName");
+    currentFileId = fileId;
+    currentFileName = fileName;
 
     // Set file status to 'analysing'
     await supabase.from("files").update({ file_status: "analysing" }).eq("id", fileId);
@@ -213,121 +275,199 @@ CRITICAL: "extracted_text" must contain ALL key text verbatim. Include dates in 
       });
     }
 
-    const model = useVisionModel ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
+    let metadata: any;
+    let rawMetadata = "";
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...userMessages,
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "extract_metadata",
-              description: "Extract comprehensive structured metadata from a document or image",
-              parameters: {
-                type: "object",
-                properties: {
-                  tags: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        name: { type: "string", description: "Tag name" },
-                        confidence: { type: "number", minimum: 0, maximum: 1 },
+    const withinBudget = await consumeAiBudget(supabase, 0.6, 100);
+    if (!withinBudget) {
+      await supabase.from("files").update({ file_status: "error" }).eq("id", fileId);
+      return new Response(JSON.stringify({ error: "Monthly AI budget limit reached (₹100)" }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (lovableApiKey) {
+      const model = useVisionModel ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
+
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lovableApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "system", content: systemPrompt }, ...userMessages],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "extract_metadata",
+                description: "Extract comprehensive structured metadata from a document or image",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    tags: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          name: { type: "string" },
+                          confidence: { type: "number", minimum: 0, maximum: 1 },
+                        },
+                        required: ["name", "confidence"],
+                        additionalProperties: false,
                       },
-                      required: ["name", "confidence"],
-                      additionalProperties: false,
                     },
-                  },
-                  summary: { type: "string", description: "5-8 sentence comprehensive summary with synonyms" },
-                  ai_description: { type: "string", description: "Natural language search query to find this document" },
-                  expiry_date: { type: "string", nullable: true, description: "ISO date of expiry/renewal/due date, or null" },
-                  extracted_text: { type: "string", description: "ALL readable text verbatim. For photos: detailed visual description." },
-                  semantic_keywords: { type: "string", description: "40-60 semantic keywords comma-separated. Include English + Hindi + regional synonyms." },
-                  entities: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        type: { type: "string", enum: ["person", "company", "date", "amount", "id_number", "phone", "email", "address", "pan", "gst", "aadhaar", "passport", "policy_number", "invoice_number", "account_number", "dob", "issue_date", "expiry_date_entity", "location", "event"] },
-                        value: { type: "string" },
-                        label: { type: "string" },
+                    summary: { type: "string" },
+                    ai_description: { type: "string" },
+                    expiry_date: { type: "string", nullable: true },
+                    extracted_text: { type: "string" },
+                    semantic_keywords: { type: "string" },
+                    entities: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          type: { type: "string" },
+                          value: { type: "string" },
+                          label: { type: "string" },
+                        },
+                        required: ["type", "value", "label"],
+                        additionalProperties: false,
                       },
-                      required: ["type", "value", "label"],
-                      additionalProperties: false,
                     },
+                    original_language: { type: "string" },
+                    translated_text: { type: "string", nullable: true },
                   },
-                  original_language: { type: "string", description: "ISO 639-1 language code of the document (e.g., 'en', 'hi', 'ta', 'mr')" },
-                  translated_text: { type: "string", nullable: true, description: "English translation of all text if document is non-English, null if already English" },
+                  required: ["tags", "summary", "ai_description", "expiry_date", "extracted_text", "semantic_keywords", "entities", "original_language", "translated_text"],
+                  additionalProperties: false,
                 },
-                required: ["tags", "summary", "ai_description", "expiry_date", "extracted_text", "semantic_keywords", "entities", "original_language", "translated_text"],
-                additionalProperties: false,
               },
             },
+          ],
+          tool_choice: { type: "function", function: { name: "extract_metadata" } },
+        }),
+      });
+
+      if (!aiResponse.ok) {
+        const errorText = await aiResponse.text();
+        console.error("AI gateway error:", aiResponse.status, errorText);
+        await supabase.from("files").update({ file_status: "error" }).eq("id", fileId);
+        if (aiResponse.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limited" }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (aiResponse.status === 402) {
+          return new Response(JSON.stringify({ error: "AI credits exhausted" }), {
+            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        throw new Error(`AI error: ${aiResponse.status}`);
+      }
+
+      const aiResult = await aiResponse.json();
+      const toolCall = aiResult?.choices?.[0]?.message?.tool_calls?.[0];
+      rawMetadata = toolCall?.function?.arguments || "";
+      if (!rawMetadata) {
+        await supabase.from("files").update({ file_status: "error" }).eq("id", fileId);
+        throw new Error("No metadata returned from AI gateway");
+      }
+    } else {
+      const fastSystemPrompt = `Extract useful metadata quickly and accurately.
+    Return ONLY valid JSON with keys: tags, summary, ai_description, expiry_date, extracted_text, semantic_keywords, entities, original_language, translated_text.
+    Rules:
+    - summary: 3-5 concise sentences with key dates/amounts/names
+    - ai_description: one natural-language search sentence
+    - tags: 6-15 tags max
+    - semantic_keywords: comma-separated keywords and synonyms
+    - entities: include people, company, date, amount, id numbers, phone, email when present
+    - original_language: ISO code
+    - translated_text: English translation if source is non-English else null`;
+
+      const promptText = `${fastSystemPrompt}\n\nUse only the provided content.`;
+      const firstUserText = typeof userMessages?.[0]?.content === "string"
+        ? userMessages[0].content
+        : userMessages?.[0]?.content?.[0]?.text || "";
+
+      const parts: any[] = [{ text: `${promptText}\n\n${firstUserText}` }];
+      // Direct Gemini fallback path is more stable with image inline data only.
+      if (useVisionModel && fileBase64 && isImage) {
+        parts.push({ inline_data: { mime_type: visionMime, data: fileBase64 } });
+      }
+
+      const geminiModel = "gemini-2.5-flash-lite";
+      const geminiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${encodeURIComponent(googleAiKey!)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: fastSystemPrompt }] },
+          contents: [{ role: "user", parts }],
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: "application/json",
+            maxOutputTokens: 2500,
           },
-        ],
-        tool_choice: { type: "function", function: { name: "extract_metadata" } },
-      }),
-    });
+        }),
+      });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI gateway error:", aiResponse.status, errorText);
-      await supabase.from("files").update({ file_status: "error" }).eq("id", fileId);
-      if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited" }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (!geminiResp.ok) {
+        const errorText = await geminiResp.text();
+        console.error("Gemini API error:", geminiResp.status, errorText);
+        if (geminiResp.status === 429) {
+          // Graceful fallback when provider is rate-limited.
+          rawMetadata = JSON.stringify({
+            tags: [{ name: "document", confidence: 0.6 }],
+            summary: `Quick analysis fallback applied due to temporary AI rate limit. File: ${fileName}.`,
+            ai_description: `Document ${fileName}`,
+            expiry_date: null,
+            extracted_text: fileContent || "",
+            semantic_keywords: (fileName || "document").replace(/[._-]/g, " "),
+            entities: [],
+            original_language: "en",
+            translated_text: null,
+          });
+        } else {
+          await supabase.from("files").update({ file_status: "error" }).eq("id", fileId);
+          throw new Error(`Gemini API error: ${geminiResp.status}`);
+        }
+      } else {
+        const geminiJson = await geminiResp.json();
+        rawMetadata = geminiJson?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text || "").join("\n") || "";
+        if (!rawMetadata) {
+          await supabase.from("files").update({ file_status: "error" }).eq("id", fileId);
+          throw new Error("No metadata returned from Gemini API");
+        }
       }
-      if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error(`AI error: ${aiResponse.status}`);
     }
 
-    const aiResult = await aiResponse.json();
-    const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) {
-      await supabase.from("files").update({ file_status: "error" }).eq("id", fileId);
-      throw new Error("No tool call in AI response");
-    }
-
-    let metadata: any;
     try {
-      metadata = JSON.parse(toolCall.function.arguments);
+      metadata = JSON.parse(rawMetadata);
     } catch (parseErr) {
       console.warn("JSON parse failed, attempting recovery:", parseErr);
-      let raw = toolCall.function.arguments || "";
-      // Try to repair truncated JSON by closing open braces/brackets
+      let raw = rawMetadata
+        .replace(/^```json\s*/i, "")
+        .replace(/^```/i, "")
+        .replace(/```$/i, "");
       const openBraces = (raw.match(/{/g) || []).length;
       const closeBraces = (raw.match(/}/g) || []).length;
       const openBrackets = (raw.match(/\[/g) || []).length;
       const closeBrackets = (raw.match(/\]/g) || []).length;
-      // Remove trailing incomplete key/value
       raw = raw.replace(/,\s*"[^"]*"?\s*:?\s*"?[^"{}[\]]*$/, "");
       raw = raw.replace(/,\s*{[^}]*$/, "");
       for (let i = 0; i < openBrackets - closeBrackets; i++) raw += "]";
       for (let i = 0; i < openBraces - closeBraces; i++) raw += "}";
+
       try {
         metadata = JSON.parse(raw);
         console.warn("Recovered truncated JSON successfully");
       } catch (recoveryErr) {
         console.error("Cannot recover JSON:", recoveryErr);
-        // Fallback: save what we can
         metadata = {
           tags: [{ name: "document", confidence: 0.5 }],
-          summary: "AI analysis was truncated. File saved successfully.",
+          summary: "AI analysis fallback used. File saved successfully.",
           ai_description: fileName,
           expiry_date: null,
           extracted_text: "",
@@ -338,6 +478,8 @@ CRITICAL: "extracted_text" must contain ALL key text verbatim. Include dates in 
         };
       }
     }
+
+    metadata = normalizeMetadata(metadata, fileName, fileContent);
 
     // Update the file record with AI metadata + multilingual data + status
     const { error: updateError } = await supabase
@@ -382,6 +524,68 @@ CRITICAL: "extracted_text" must contain ALL key text verbatim. Include dates in 
     });
   } catch (e) {
     console.error("analyze-file error:", e);
+
+    // For any runtime failure after file identification, always return a safe fallback
+    // to prevent client-facing 500 errors during upload/reanalyze flows.
+    if (currentFileId) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const sb = createClient(supabaseUrl, supabaseServiceKey);
+        const fallbackName = currentFileName || "document";
+
+        await sb
+          .from("files")
+          .update({
+            ai_summary: `File saved. AI analysis fallback used for ${fallbackName}.`,
+            ai_description: fallbackName,
+            file_status: "ready",
+          })
+          .eq("id", currentFileId);
+
+        return new Response(JSON.stringify({
+          success: true,
+          fallback: true,
+          message: "AI fallback saved",
+          error: e instanceof Error ? e.message : String(e),
+          metadata: {
+            tags: [{ name: "document", confidence: 0.5 }],
+            summary: `File saved. AI analysis fallback used for ${fallbackName}.`,
+            ai_description: fallbackName,
+            extracted_text: "",
+            semantic_keywords: fallbackName.replace(/[._-]/g, " "),
+            entities: [],
+          },
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (fallbackErr) {
+        console.error("fallback write failed:", fallbackErr);
+
+        // Even if DB update fails, avoid hard failing the HTTP request.
+        return new Response(JSON.stringify({
+          success: true,
+          fallback: true,
+          message: "AI fallback returned (DB update failed)",
+          error: e instanceof Error ? e.message : String(e),
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Prevent stuck "analysing" state when any unexpected error occurs.
+    if (currentFileId) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const sb = createClient(supabaseUrl, supabaseServiceKey);
+        await sb.from("files").update({ file_status: "error" }).eq("id", currentFileId);
+      } catch (statusErr) {
+        console.error("failed to set file_status=error:", statusErr);
+      }
+    }
+
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -29,6 +29,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFolders } from "@/hooks/useFolders";
 import { categorizeTag } from "@/lib/tagCategories";
+import { invokeAnalyzeFile, getAnalyzeFileSimpleError } from "@/lib/analyzeFileClient";
 
 function mapFileType(mimeType: string): "pdf" | "image" | "docx" | "spreadsheet" {
   if (mimeType.includes("pdf")) return "pdf";
@@ -151,16 +152,17 @@ const FilesPage = () => {
 
   const handleReanalyze = async (fileId: string, fileName: string, fileType: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-file`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ fileId, fileName, fileType }),
-      });
+      const { error } = await invokeAnalyzeFile({ fileId, fileName, fileType });
+      if (error) {
+        const simple = getAnalyzeFileSimpleError(error);
+        console.error("Reanalyze failed", { status: simple.status, fileId, fileName });
+        throw new Error(simple.message);
+      }
+
       queryClient.invalidateQueries({ queryKey: ["files"] });
       toast.success("Re-analysis started!");
-    } catch {
-      toast.error("Failed to refresh tags");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to refresh tags");
     }
   };
 

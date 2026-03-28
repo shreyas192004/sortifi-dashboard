@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { trackEvent } from "@/hooks/useAnalytics";
+import { invokeAnalyzeFile, getAnalyzeFileSimpleError } from "@/lib/analyzeFileClient";
 
 export interface UploadingFile {
   id: string;
@@ -79,6 +80,18 @@ export function useFileUpload() {
         return;
       }
 
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setFiles((prev) => prev.map((f) => f.id === uploadFile.id ? {
+          ...f,
+          status: "error" as const,
+          fileStatus: "error",
+          errorMessage: "Session expired. Please sign in again.",
+        } : f));
+        toast.error("Session expired. Please sign in again.");
+        return;
+      }
+
       const quotaCheck = await checkStorageQuota(uploadFile.file.size);
       if (!quotaCheck.allowed) {
         setFiles((prev) => prev.map((f) => f.id === uploadFile.id ? { ...f, status: "error" as const, errorMessage: quotaCheck.message } : f));
@@ -136,15 +149,20 @@ export function useFileUpload() {
       setFiles((prev) => prev.map((f) => f.id === uploadFile.id ? { ...f, progress: 80, status: "processing" as const, fileStatus: "analysing" } : f));
 
       // Trigger AI analysis (will set file_status to 'analysing' then 'ready')
-      const { data: aiData, error: aiError } = await supabase.functions.invoke("analyze-file", {
-        body: { fileId: fileRecord.id, fileName: uploadFile.file.name, fileType: uploadFile.file.type },
+      const { data: aiData, error: aiError } = await invokeAnalyzeFile({
+        fileId: fileRecord.id,
+        fileName: uploadFile.file.name,
+        fileType: uploadFile.file.type,
       });
 
       if (aiError) {
-        console.error("AI analysis error:", aiError);
+        const simple = getAnalyzeFileSimpleError(aiError);
+        console.error("AI analysis error (technical):", aiError);
+        console.error("AI analysis error (simple):", simple.message, simple.status ? `(status ${simple.status})` : "");
+        toast.warning(simple.message);
         setFiles((prev) => prev.map((f) => f.id === uploadFile.id ? {
           ...f, progress: 100, status: "complete" as const, fileStatus: "error",
-          aiSummary: "AI analysis failed - file saved successfully",
+          aiSummary: `${simple.message} File saved successfully.`,
         } : f));
       } else {
         const metadata = aiData?.metadata;

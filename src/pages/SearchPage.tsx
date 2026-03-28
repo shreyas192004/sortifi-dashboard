@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { invokeAnalyzeFile, getAnalyzeFileSimpleError } from "@/lib/analyzeFileClient";
 
 function mapFileType(mimeType: string): "pdf" | "image" | "docx" | "spreadsheet" {
   if (mimeType.includes("pdf")) return "pdf";
@@ -139,23 +140,46 @@ const SearchPage = () => {
       toast.error("No files found to refresh");
       return;
     }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      toast.error("Session expired. Please sign in again to refresh tags.");
+      return;
+    }
+
     setBulkReanalyzing(true);
     setReanalyzeProgress({ done: 0, total: fileList.length });
     let successCount = 0;
     let failureCount = 0;
+    let unauthorized = false;
     try {
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
         setReanalyzeProgress({ done: i, total: fileList.length });
-        const { error } = await supabase.functions.invoke("analyze-file", {
-          body: { fileId: file.id, fileName: file.file_name, fileType: file.file_type },
+        const { error } = await invokeAnalyzeFile({
+          fileId: file.id,
+          fileName: file.file_name,
+          fileType: file.file_type,
         });
-        if (error) { failureCount++; } else { successCount++; }
+        if (error) {
+          const simple = getAnalyzeFileSimpleError(error);
+          if (simple.status === 401) {
+            unauthorized = true;
+            break;
+          }
+          failureCount++;
+        } else {
+          successCount++;
+        }
       }
-      setReanalyzeProgress({ done: fileList.length, total: fileList.length });
-      await queryClient.invalidateQueries({ queryKey: ["files"] });
-      if (failureCount === 0) toast.success(`Refreshed tags for ${successCount} files`);
-      else toast.warning(`Refreshed tags for ${successCount} files, ${failureCount} failed`);
+      if (unauthorized) {
+        toast.error("Unauthorized request. Please sign in again, then retry refresh.");
+      } else {
+        setReanalyzeProgress({ done: fileList.length, total: fileList.length });
+        await queryClient.invalidateQueries({ queryKey: ["files"] });
+        if (failureCount === 0) toast.success(`Refreshed tags for ${successCount} files`);
+        else toast.warning(`Refreshed tags for ${successCount} files, ${failureCount} failed`);
+      }
     } catch { toast.error("Bulk refresh failed"); }
     finally {
       setBulkReanalyzing(false);

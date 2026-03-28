@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { consumeAiBudget } from "../_shared/aiBudget.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,6 +61,14 @@ serve(async (req) => {
     // ── Step 2: AI Query Expansion ──
     let expandedTerms = "";
     try {
+      const expandWithinBudget = await consumeAiBudget(supabase, 0.06, 100);
+      if (!expandWithinBudget) {
+        return new Response(JSON.stringify({ error: "Monthly AI budget limit reached (₹100)", results: [], total: 0 }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const expandResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -152,6 +161,14 @@ serve(async (req) => {
     // ── Step 5: AI Reranking of top results ──
     if (mergedResults.length > 1) {
       try {
+        const rerankWithinBudget = await consumeAiBudget(supabase, 0.06, 100);
+        if (!rerankWithinBudget) {
+          return new Response(JSON.stringify({ error: "Monthly AI budget limit reached (₹100)", results: [], total: 0 }), {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
         const rerankResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {

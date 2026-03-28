@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { consumeAiBudget } from "../_shared/aiBudget.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,14 @@ serve(async (req) => {
     }
 
     const fileSummaries = files.map(f => `- [ID: ${f.id}] ${f.file_name} (${f.file_type}): ${(f.ai_summary || '').substring(0, 100)}`).join("\n");
+
+    const withinBudget = await consumeAiBudget(serviceClient, 0.2, 100);
+    if (!withinBudget) {
+      return new Response(JSON.stringify({ error: "Monthly AI budget limit reached (₹100)" }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

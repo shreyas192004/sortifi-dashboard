@@ -42,9 +42,13 @@ export default function CluedoxLandingPage() {
 
     const trackVisitor = async () => {
       try {
-        await supabase.rpc('increment_visitor_count');
+        const { error } = await supabase.rpc('increment_visitor_count');
+        // Ignore missing RPC in environments where migration isn't applied.
+        if (error && error.code !== 'PGRST202') {
+          console.warn('Visitor tracking unavailable:', error.message);
+        }
       } catch (err) {
-        console.error('Visitor tracking failed:', err);
+        console.warn('Visitor tracking unavailable');
       }
     };
     trackVisitor();
@@ -662,10 +666,13 @@ export default function CluedoxLandingPage() {
       scrollTrigger: { trigger: '#features-quote', start: 'top 80%' },
       opacity: 1, y: 0, duration: 0.6, ease: 'power2.out'
     });
-    gsap.to('#features-cta', {
-      scrollTrigger: { trigger: '#features-cta', start: 'top 85%' },
-      opacity: 1, y: 0, duration: 0.5, ease: 'power2.out'
-    });
+    const featuresCta = document.getElementById('features-cta');
+    if (featuresCta) {
+      gsap.to(featuresCta, {
+        scrollTrigger: { trigger: featuresCta, start: 'top 85%' },
+        opacity: 1, y: 0, duration: 0.5, ease: 'power2.out'
+      });
+    }
     gsap.utils.toArray('#feat-grid .feat-card, #feat-grid-3 .feat-card').forEach((el, i) => {
       gsap.to(el, {
         scrollTrigger: { trigger: '#feat-grid', start: 'top 80%' },
@@ -1180,7 +1187,7 @@ export default function CluedoxLandingPage() {
         <div className="features-inner">
           <div className="section-eyebrow" style={{ justifyContent: 'center', marginBottom: '20px', }}>✦ CORE FEATURES</div>
           <p className="features-quote" id="features-quote">"If AI could handle your filing, how much time would you have for the <em>work that actually matters?</em>"</p>
-          <div className="nav-actions flex justify-center mb-20 mt-20">
+          <div className="nav-actions flex justify-center mb-20 mt-20" id="features-cta">
             <button className="btn-primary hero-main-cta" onClick={() => navigate('/login')}>Get Started Free</button>
           </div>
 

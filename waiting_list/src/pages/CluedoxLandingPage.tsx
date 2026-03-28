@@ -27,9 +27,12 @@ export default function CluedoxLandingPage() {
   React.useEffect(() => {
     const trackVisitor = async () => {
       try {
-        await supabase.rpc('increment_visitor_count');
+        const { error } = await supabase.rpc('increment_visitor_count');
+        if (error && error.code !== 'PGRST202') {
+          console.warn('Visitor tracking unavailable:', error.message);
+        }
       } catch (err) {
-        console.error('Visitor tracking failed:', err);
+        console.warn('Visitor tracking unavailable');
       }
     };
     trackVisitor();

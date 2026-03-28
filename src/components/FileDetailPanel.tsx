@@ -10,6 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import { invokeAnalyzeFile, getAnalyzeFileSimpleError } from "@/lib/analyzeFileClient";
 
 interface Props {
   file: MockFile & { id?: string; fileType?: string; entities?: any[] };
@@ -60,20 +61,21 @@ const FileDetailPanel = ({ file, onClose, onTagClick }: Props) => {
     if (!file.id) return;
     setReanalyzing(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-file`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ fileId: file.id, fileName: file.name, fileType: file.fileType || file.type }),
+      const { error } = await invokeAnalyzeFile({
+        fileId: file.id,
+        fileName: file.name,
+        fileType: file.fileType || file.type,
       });
-      if (!resp.ok) throw new Error("Failed");
+      if (error) {
+        const simple = getAnalyzeFileSimpleError(error);
+        console.error("Reanalyze failed", { status: simple.status, fileId: file.id, fileName: file.name });
+        throw new Error(simple.message);
+      }
+
       await queryClient.invalidateQueries({ queryKey: ["files"] });
       toast.success("Tags refreshed successfully!");
-    } catch {
-      toast.error("Failed to refresh tags");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to refresh tags");
     } finally {
       setReanalyzing(false);
     }

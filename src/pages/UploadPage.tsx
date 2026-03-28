@@ -181,8 +181,8 @@ const UploadPage = () => {
                           <span className="text-xs font-medium text-primary">AI Analysis</span>
                         </div>
                         <div className="flex gap-1.5 mb-2 flex-wrap">
-                          {f.aiTags.map((tag) => (
-                            <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{tag}</span>
+                          {f.aiTags.map((tag, idx) => (
+                            <span key={`${f.id}-${tag}-${idx}`} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{tag}</span>
                           ))}
                         </div>
                         <p className="text-xs text-muted-foreground">{f.aiSummary}</p>

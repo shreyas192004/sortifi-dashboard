@@ -17,7 +17,12 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
     let mounted = true;
 
     const redirectToLogin = () => {
-      navigate("/login", { replace: true });
+      navigate("/login", {
+        replace: true,
+        state: {
+          from: `${location.pathname}${location.search}${location.hash}`,
+        },
+      });
     };
 
     const check = async () => {

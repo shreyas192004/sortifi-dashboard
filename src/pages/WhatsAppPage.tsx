@@ -14,6 +14,8 @@ interface LinkedPhone {
   verification_code: string | null;
 }
 
+const getVerifyCommand = (code: string | null) => (code ? `VERIFY ${code}` : "VERIFY <code>");
+
 const WhatsAppPage = () => {
   const [phone, setPhone] = useState("");
   const [linkedPhones, setLinkedPhones] = useState<LinkedPhone[]>([]);
@@ -50,6 +52,20 @@ const WhatsAppPage = () => {
     });
   };
 
+  const copyVerifyCommand = async (linkedPhone: LinkedPhone) => {
+    if (!linkedPhone.verification_code) {
+      toast.error("No verification code available. Tap Resend Code first.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(getVerifyCommand(linkedPhone.verification_code));
+      toast.success("Verification command copied. Send it from this WhatsApp number.");
+    } catch {
+      toast.error("Could not copy command. Please type it manually.");
+    }
+  };
+
   const linkWhatsApp = async () => {
     const cleanPhone = phone.replace(/[\s+\-()]/g, "");
     if (cleanPhone.length < 10) {
@@ -82,12 +98,15 @@ const WhatsAppPage = () => {
         .single();
 
       if (error) throw error;
-
-      await sendOtpToWhatsApp(cleanPhone, code);
-
       setLinkedPhones((prev) => [...prev, data]);
       setPhone("");
-      toast.success("Verification code sent to your WhatsApp!");
+
+      try {
+        await sendOtpToWhatsApp(cleanPhone, code);
+        toast.success("Verification code sent to your WhatsApp!");
+      } catch {
+        toast.warning("OTP delivery failed. Use the fallback VERIFY command shown on the card.");
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to link");
     } finally {
@@ -112,7 +131,10 @@ const WhatsAppPage = () => {
         .eq("id", linkedPhone.id)
         .single();
 
-      if (!data || data.verification_code !== otp) {
+      // Testing-only shortcut: allow 111111 in local dev mode.
+      const isDevBypassOtp = import.meta.env.DEV && otp === "111111";
+
+      if (!data || (!isDevBypassOtp && data.verification_code !== otp)) {
         toast.error("Invalid code. Please try again.");
         return;
       }
@@ -126,6 +148,9 @@ const WhatsAppPage = () => {
         prev.map((p) => (p.id === linkedPhone.id ? { ...p, verified: true, verification_code: null } : p))
       );
       setOtpInputs((prev) => ({ ...prev, [linkedPhone.id]: "" }));
+      if (isDevBypassOtp) {
+        toast.warning("Linked using development test OTP 111111.");
+      }
       toast.success("WhatsApp linked successfully! 🎉");
     } catch (err: any) {
       toast.error(err.message || "Verification failed");
@@ -143,13 +168,16 @@ const WhatsAppPage = () => {
         .from("whatsapp_users")
         .update({ verification_code: code, verified: false })
         .eq("id", linkedPhone.id);
-
-      await sendOtpToWhatsApp(linkedPhone.phone_number, code);
-
       setLinkedPhones((prev) =>
         prev.map((p) => (p.id === linkedPhone.id ? { ...p, verified: false, verification_code: code } : p))
       );
-      toast.success("New code sent to your WhatsApp!");
+
+      try {
+        await sendOtpToWhatsApp(linkedPhone.phone_number, code);
+        toast.success("New code sent to your WhatsApp!");
+      } catch {
+        toast.warning("OTP resend failed. Use the fallback VERIFY command shown on the card.");
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to resend code");
     } finally {
@@ -240,8 +268,21 @@ const WhatsAppPage = () => {
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
                       <Send className="w-4 h-4 text-primary shrink-0" />
                       <p className="text-xs text-muted-foreground">
-                        Check your WhatsApp and enter the 6-digit code
+                        Check your WhatsApp and enter the 6-digit code.
+                        If OTP does not arrive, send <strong>{getVerifyCommand(lp.verification_code)}</strong> from this same number.
                       </p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-secondary/20 p-3 text-xs text-muted-foreground space-y-2">
+                      <p className="font-medium text-foreground">No OTP? Fallback verify</p>
+                      <p>1. Open WhatsApp from +{lp.phone_number}</p>
+                      <p>2. Message our bot number with: <strong>{getVerifyCommand(lp.verification_code)}</strong></p>
+                      <p>3. Come back and refresh this page</p>
+                      <div>
+                        <Button onClick={() => copyVerifyCommand(lp)} variant="outline" size="sm" className="gap-2">
+                          <Send className="w-3.5 h-3.5" />
+                          Copy Verify Command
+                        </Button>
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Input

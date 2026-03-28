@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { consumeAiBudget } from "../_shared/aiBudget.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,24 +66,80 @@ serve(async (req) => {
     if (cleanPhone.length > 10) phoneVariants.push(cleanPhone.slice(-10));
     if (cleanPhone.length === 10) phoneVariants.push("91" + cleanPhone);
 
+    // ── Fallback verification (no OTP delivery required) ──
+    // User can send: VERIFY <code> from the same WhatsApp number to complete linking.
+    const normalizedMsg = messageText.replace(/\s+/g, " ").trim();
+    const verifyMatch = normalizedMsg.match(/^verify\s+(.+)$/i);
+    if (verifyMatch) {
+      const providedCode = verifyMatch[1].trim();
+
+      let matchedRecord: any = null;
+      for (const pv of phoneVariants) {
+        const { data: pendingLinks } = await supabase
+          .from("whatsapp_users")
+          .select("id, verification_code")
+          .eq("phone_number", pv)
+          .eq("verified", false);
+
+        if (!pendingLinks || pendingLinks.length === 0) continue;
+
+        matchedRecord = pendingLinks.find(
+          (row: any) => (row.verification_code || "").toLowerCase() === providedCode.toLowerCase(),
+        );
+        if (matchedRecord) break;
+      }
+
+      if (matchedRecord) {
+        await supabase
+          .from("whatsapp_users")
+          .update({ verified: true, verification_code: null })
+          .eq("id", matchedRecord.id);
+
+        await sendText(
+          msg91Key,
+          integratedNumber,
+          cleanPhone,
+          "✅ Your number is verified and linked to Cluedox. Type *sort* to open the menu.",
+        );
+      } else {
+        await sendText(
+          msg91Key,
+          integratedNumber,
+          cleanPhone,
+          "❌ Verification code not found. Open Cluedox app -> Settings -> WhatsApp and try again.",
+        );
+      }
+
+      return jsonOk({ ok: true, msg: "verify handled" });
+    }
+
     // ── Multi-Account Lookup ──
-    let waUsers: any[] = [];
+    // Collect verified links from all number variants (e.g. 91XXXXXXXXXX and XXXXXXXXXX).
+    const verifiedByUserId = new Map<string, any>();
     for (const pv of phoneVariants) {
       const { data } = await supabase
         .from("whatsapp_users")
         .select("user_id, verified, phone_number")
         .eq("phone_number", pv);
-      if (data && data.length > 0) {
-        waUsers = data.filter((u: any) => u.verified);
-        break;
-      }
+
+      if (!data || data.length === 0) continue;
+
+      data
+        .filter((u: any) => u.verified)
+        .forEach((u: any) => {
+          if (!verifiedByUserId.has(u.user_id)) {
+            verifiedByUserId.set(u.user_id, u);
+          }
+        });
     }
+
+    let waUsers: any[] = Array.from(verifiedByUserId.values());
 
     if (waUsers.length === 0) {
       const msgLower = messageText.toLowerCase();
       if (msgLower === "sort") {
         await sendText(msg91Key, integratedNumber, cleanPhone,
-          "👋 Welcome to Cluedox!\n\nTo use WhatsApp features, please link your account:\n1. Open Cluedox app → Settings → WhatsApp\n2. Enter your number and verify the code sent here");
+          "👋 Welcome to Cluedox!\n\nTo use WhatsApp features, please link your account:\n1. Open Cluedox app -> Settings -> WhatsApp\n2. Verify using OTP OR send VERIFY <code> as fallback");
       }
       return jsonOk({ ok: true });
     }
@@ -104,8 +161,17 @@ serve(async (req) => {
 
     // Check if user needs to select an account
     if (waUsers.length > 1) {
+      const msgLower = messageText.toLowerCase();
       const sessionData = session?.session_data as any;
       const selectedUserId = sessionData?.selected_user_id;
+      const selectedUserStillValid = !!selectedUserId && waUsers.some((u: any) => u.user_id === selectedUserId);
+
+      // On each `sort`, ask user to choose account when this number is linked to multiple accounts.
+      if (msgLower === "sort") {
+        await sendAccountSelectionPrompt(supabase, msg91Key, integratedNumber, cleanPhone, waUsers);
+        await setSession(supabase, cleanPhone, "awaiting_account_select", { accounts: waUsers });
+        return jsonOk({ ok: true });
+      }
 
       // Handle account selection reply
       if (session?.session_type === "awaiting_account_select" && /^\d+$/.test(messageText)) {
@@ -123,23 +189,8 @@ serve(async (req) => {
       }
 
       // If no account selected yet and not in selection flow, ask user to pick
-      if (!selectedUserId || (session?.session_type !== "awaiting_account_select" && !selectedUserId)) {
-        // Fetch profile names for each account
-        const userIds = waUsers.map((u: any) => u.user_id);
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("user_id, full_name, company_name")
-          .in("user_id", userIds);
-
-        let selectMsg = "🔀 *Multiple accounts found*\n\nThis WhatsApp number is linked to multiple accounts. Please select one:\n\n";
-        waUsers.forEach((u: any, i: number) => {
-          const profile = profiles?.find((p: any) => p.user_id === u.user_id);
-          const name = profile?.full_name || profile?.company_name || `Account ${i + 1}`;
-          selectMsg += `*${i + 1}.* ${name}\n`;
-        });
-        selectMsg += "\n📌 *Reply with a number* to select your account";
-
-        await sendText(msg91Key, integratedNumber, cleanPhone, selectMsg);
+      if (!selectedUserStillValid) {
+        await sendAccountSelectionPrompt(supabase, msg91Key, integratedNumber, cleanPhone, waUsers);
         await setSession(supabase, cleanPhone, "awaiting_account_select", { accounts: waUsers });
         return jsonOk({ ok: true });
       }
@@ -276,6 +327,30 @@ async function sendMoreMenu(authKey: string, intNum: string, phone: string) {
     await sendText(authKey, intNum, phone,
       "📋 *More Options*\n\n*3.* 📊 View stats\n*4.* 📂 Recent files\n*5.* ❓ Help\n\n📌 *Reply with a number*");
   }
+}
+
+async function sendAccountSelectionPrompt(
+  supabase: any,
+  authKey: string,
+  intNum: string,
+  phone: string,
+  waUsers: any[],
+) {
+  const userIds = waUsers.map((u: any) => u.user_id);
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("user_id, full_name, company_name")
+    .in("user_id", userIds);
+
+  let selectMsg = "🔀 *Multiple accounts found*\n\nThis WhatsApp number is linked to multiple accounts. Please select one:\n\n";
+  waUsers.forEach((u: any, i: number) => {
+    const profile = profiles?.find((p: any) => p.user_id === u.user_id);
+    const name = profile?.full_name || profile?.company_name || `Account ${i + 1}`;
+    selectMsg += `*${i + 1}.* ${name}\n`;
+  });
+  selectMsg += "\n📌 *Reply with a number* to select your account";
+
+  await sendText(authKey, intNum, phone, selectMsg);
 }
 
 async function sendInteractive(authKey: string, payload: any, logLabel: string): Promise<boolean> {
@@ -536,6 +611,10 @@ Keywords: ${fileRecord.semantic_keywords || "N/A"}`;
 
   if (lovableApiKey) {
     try {
+      const withinBudget = await consumeAiBudget(supabase, 0.08, 100);
+      if (!withinBudget) {
+        answer = "Monthly AI budget limit reached (₹100). Please try again next month.";
+      } else {
       const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -554,6 +633,7 @@ Keywords: ${fileRecord.semantic_keywords || "N/A"}`;
         answer = data.choices?.[0]?.message?.content || "I couldn't generate an answer.";
       } else {
         answer = "⚠️ AI is temporarily unavailable. Please try again.";
+      }
       }
     } catch (e) {
       console.error("AI gateway error:", e);

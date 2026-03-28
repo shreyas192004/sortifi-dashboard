@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { consumeAiBudget } from "../_shared/aiBudget.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +26,15 @@ serve(async (req) => {
 
     const { query, fileSummaries } = await req.json();
     if (!query) throw new Error("Missing query");
+
+    const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const withinBudget = await consumeAiBudget(serviceClient, 0.08, 100);
+    if (!withinBudget) {
+      return new Response(JSON.stringify({ error: "Monthly AI budget limit reached (₹100)", suggestions: [] }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Ask AI to find which files are most relevant to the query
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
